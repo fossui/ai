@@ -1,0 +1,10 @@
+name: fossui_generator
+description: Reads foss_ui_package and emits registry.json for the MCP server.
+publish_to: none
+
+environment:
+  sdk: ^3.11.5
+
+dependencies:
+  analyzer: ^8.4.0
+  path: ^1.9.0
