@@ -1,0 +1,34 @@
+tags: [tooltip, hint, hover, overlay, popup, label, help]
+whenToUse: >-
+  A small floating text hint next to a trigger. Wrap the trigger in FossTooltip
+  and it shows message on hover, keyboard focus, or long-press, then dismisses on
+  exit, blur, Escape, or after hideDelay. The hint is text only and never blocks
+  input. Use it to label an icon-only control or add a short aside. For rich or
+  interactive floating content, reach for a popover instead.
+conventions:
+  do:
+    - Wrap the trigger widget in child; it renders as-is with no added visual.
+    - Set message as a plain String; the tooltip announces it through the trigger's semantics.
+    - Set the preferred edge with side; it is a FossTooltipSide enum and flips to the opposite side to stay on screen.
+    - Tune the appear and dismiss timing with showDelay and hideDelay.
+    - Use semanticLabel to override the announced text when it should differ from message.
+    - For a one-off look, pass a FossTooltipStyle to style; retheme globally via FossThemeData otherwise.
+  dont:
+    - Do not pass a Widget to message; it is a String, and the text is what gets announced.
+    - Do not put interactive or tappable content in a tooltip; the popup ignores pointer input.
+    - Do not pass a String for side; it is a FossTooltipSide enum.
+    - Do not pass color, borderRadius, or padding to FossTooltip; those params do not exist.
+    - Do not rely on hover alone for touch; the tooltip also opens on long-press.
+commonMistakes:
+  - wrong: "FossTooltip(message: 'Copy link') // no child"
+    right: "FossTooltip(message: 'Copy link', child: FossButton(onPressed: copy, child: const Icon(LucideIcons.copy)))"
+    why: The tooltip wraps a trigger; child is required.
+  - wrong: "FossTooltip(message: const Text('Copy'), child: button)"
+    right: "FossTooltip(message: 'Copy', child: button)"
+    why: message is a String, not a Widget; the tooltip is text only.
+  - wrong: "FossTooltip(side: 'bottom', message: 'More', child: button)"
+    right: "FossTooltip(side: FossTooltipSide.bottom, message: 'More', child: button)"
+    why: side is a FossTooltipSide enum, not a string.
+  - wrong: "FossTooltip(message: 'Undo', child: FossButton(onPressed: undo, child: const Text('Undo')))"
+    right: "FossButton(onPressed: undo, child: const Text('Undo')) // a tappable action does not belong in a tooltip"
+    why: The popup ignores pointer input, so an action placed as the hint can never be reached.

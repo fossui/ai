@@ -1,0 +1,29 @@
+tags: [action, button, form, cta, submit, primary]
+whenToUse: >
+  The default for any tappable action. Use variant for emphasis (primary for the
+  main action, destructive for delete, ghost or link for low emphasis) and
+  FossButton.icon when the control is a single icon with no visible label.
+conventions:
+  do:
+    - Set emphasis with variant and height with size; both are enums.
+    - Retheme globally through FossThemeData; the look flows from the theme.
+    - For a genuine one-off, pass a FossButtonStyle to style.
+    - Put any icon widget in leading or trailing; the slots are icon-agnostic.
+    - Give FossButton.icon a semanticLabel; it has no visible text.
+    - Disable by passing a null onPressed, or show a spinner with loading.
+  dont:
+    - Do not pass color, borderRadius, or padding; those params do not exist.
+    - Do not wrap the button in a Container to restyle it; change the theme.
+    - Do not pass a String or bool for variant or size; they are enums.
+    - Do not rely on the button to block double taps; gate re-entrancy yourself
+      or drive a FossButtonController.
+commonMistakes:
+  - wrong: "FossButton(color: Colors.red, onPressed: _delete, child: Text('Delete'))"
+    right: "FossButton(variant: FossButtonVariant.destructive, onPressed: _delete, child: const Text('Delete'))"
+    why: There is no color param; emphasis comes from the variant.
+  - wrong: "FossButton(variant: 'primary', onPressed: _save, child: Text('Save'))"
+    right: "FossButton(variant: FossButtonVariant.primary, onPressed: _save, child: const Text('Save'))"
+    why: variant is an enum, not a string.
+  - wrong: "FossButton.icon(icon: Icon(LucideIcons.x), onPressed: _close)"
+    right: "FossButton.icon(icon: const Icon(LucideIcons.x), semanticLabel: 'Close', onPressed: _close)"
+    why: An icon-only button needs a semanticLabel for assistive tech.

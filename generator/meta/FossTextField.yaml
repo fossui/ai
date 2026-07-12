@@ -1,0 +1,44 @@
+tags: [text-field, input, form, textarea, email, password, search, multiline]
+whenToUse: >-
+  Free-form text entry: a single-line input by default, or a growing multiline
+  textarea when maxLines is anything other than 1. Pairs an editable box with an
+  optional label above and a helper or error caption below.
+conventions:
+  do:
+    - Read the value through onChanged, or bind a controller; when both are
+      omitted the field creates and disposes its own controller and focusNode.
+    - Set the height with size (sm, md, or lg), all enum values.
+    - Add context with label, hintText (placeholder), and helperText.
+    - Mark invalid with errorText; it puts the field in its error state and
+      replaces the helper caption.
+    - Put any widget in leading or trailing; the slots are icon-agnostic and
+      themed to match the text.
+    - Set maxLines to a value other than 1 (or null to grow unbounded) for a
+      multiline textarea; use minLines for its starting height.
+    - Set obscureText for passwords, keyboardType for the layout, and
+      textInputAction for the keyboard action button.
+    - For a one-off, pass a FossTextFieldStyle to style; retheme globally through
+      FossThemeData.
+  dont:
+    - Do not pass an InputDecoration or a decoration param; there is none.
+      Use label, hintText, helperText, errorText, leading, and trailing.
+    - Do not pass leading or trailing on a multiline field (maxLines != 1); the
+      assert rejects it, a textarea has no icon rail.
+    - Do not pass a String or int for size; it is FossTextFieldSize.
+    - Do not pass borderRadius, contentPadding, or fillColor as constructor args;
+      restyle via FossTextFieldStyle or the theme.
+    - Do not wrap the field in a Container to add a border or background; the box
+      draws its own from the theme.
+commonMistakes:
+  - wrong: "FossTextField(decoration: InputDecoration(labelText: 'Email', hintText: 'you@x.com'))"
+    right: "FossTextField(label: 'Email', hintText: 'you@x.com')"
+    why: There is no decoration param; label, hintText, helperText, and errorText carry the same content.
+  - wrong: "FossTextField(size: 'lg', label: 'Name')"
+    right: "FossTextField(size: FossTextFieldSize.lg, label: 'Name')"
+    why: size is an enum, not a string.
+  - wrong: "FossTextField(maxLines: 5, leading: const Icon(LucideIcons.mail))"
+    right: "FossTextField(maxLines: 5, minLines: 3)"
+    why: leading and trailing are single-line only; a multiline field asserts against them.
+  - wrong: "FossTextField(label: 'Search', borderRadius: 999)"
+    right: "FossTextField(label: 'Search', style: const FossTextFieldStyle(borderRadius: 999))"
+    why: There is no borderRadius param on the constructor; set it on FossTextFieldStyle or the theme.

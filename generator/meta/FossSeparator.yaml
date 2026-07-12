@@ -1,0 +1,26 @@
+tags: [separator, divider, rule, hairline, line, layout]
+whenToUse: >-
+  A hairline rule that divides content along a row or a column. A 1 logical
+  pixel line in the border role. Static and non-interactive; use it to split
+  sections, not to add spacing.
+conventions:
+  do:
+    - Set orientation to place the rule; it is an enum, horizontal by default, vertical for a column of side-by-side content.
+    - Give the long axis a bounded parent, a Column with stretch for horizontal, a Row for vertical; the rule fills that axis.
+    - Leave decorative true for a purely visual line; set it false to mark a real content boundary in the semantics tree.
+    - Change the line color once through FossColors.border; it always reads from the theme.
+  dont:
+    - Do not pass color, thickness, height, or width params; the separator has none, and the line is a fixed 1 pixel.
+    - Do not pass a String for orientation; it is FossSeparatorOrientation.
+    - Do not place it where its long axis is unbounded; an unbounded width or height surfaces a layout error.
+    - Do not reach for a raw Container or Divider to draw a line; use FossSeparator so it tracks the border token.
+commonMistakes:
+  - wrong: "FossSeparator(color: Colors.grey, thickness: 2)"
+    right: "FossSeparator()"
+    why: there are no color or thickness params; the line is a fixed 1 pixel in the border role, rethemed via FossColors.border.
+  - wrong: "FossSeparator(orientation: 'vertical')"
+    right: "FossSeparator(orientation: FossSeparatorOrientation.vertical)"
+    why: orientation is an enum, not a string.
+  - wrong: "Row(children: [a, FossSeparator(orientation: FossSeparatorOrientation.vertical), b])"
+    right: "SizedBox(height: 24, child: Row(children: [a, FossSeparator(orientation: FossSeparatorOrientation.vertical), b]))"
+    why: a vertical rule fills its parent's height, so the Row must be height-bounded or the fill has nothing to clamp against.

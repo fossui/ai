@@ -1,0 +1,40 @@
+tags: [dialog, modal, overlay, popup, sheet, bottom-sheet, confirm]
+whenToUse: >-
+  A dismissible modal for a focused task, a message, or a confirmation the user
+  may cancel. Reach for FossAlertDialog instead when the choice must be made and
+  the scrim should not dismiss, and for FossDrawer when the panel should anchor
+  to a screen edge and slide in from it.
+conventions:
+  do:
+    - Open it with showFossDialog and build FossDialog inside the builder.
+    - Return a result by popping the route with Navigator.pop(context, value);
+      showFossDialog resolves to that value.
+    - Put actions in the actions list as FossButton widgets; they align trailing.
+    - Choose the shape with presentation on showFossDialog (bottomSheet by
+      default, centered for a card); both are FossDialogPresentation values.
+    - Set footerVariant with the FossDialogFooterVariant enum.
+    - Pass barrierDismissible false to showFossDialog when a tap outside should
+      not close it.
+    - Retheme globally through FossThemeData, or pass a FossDialogStyle to style
+      for a one-off.
+  dont:
+    - Do not push FossDialog with Navigator.push or drop it into the tree; it is
+      a surface for the showFossDialog builder.
+    - Do not pass color, borderRadius, or padding; those params do not exist.
+      Override through FossDialogStyle or the theme.
+    - Do not pass a String for presentation or footerVariant; they are enums.
+    - Do not set presentation on both the show function and the widget expecting
+      them to differ; the widget inherits the route value unless you override it.
+commonMistakes:
+  - wrong: "showDialog(context: context, builder: (_) => FossDialog(title: Text('Hi')))"
+    right: "showFossDialog<void>(context: context, builder: (context) => const FossDialog(title: Text('Hi')))"
+    why: FossDialog is opened by showFossDialog, which sets the route, scrim, and transition.
+  - wrong: "FossDialog(presentation: 'centered', title: Text('Hi'))"
+    right: "showFossDialog(context: context, presentation: FossDialogPresentation.centered, builder: (context) => const FossDialog(title: Text('Hi')))"
+    why: presentation is a FossDialogPresentation enum, and the shape is set on the show function.
+  - wrong: "FossDialog(borderRadius: 20, title: Text('Hi'))"
+    right: "showFossDialog<void>(context: context, builder: (context) => const FossDialog(title: Text('Hi'), style: FossDialogStyle(borderRadius: 20)))"
+    why: There is no borderRadius param; per-instance visuals go through FossDialogStyle, and the dialog opens via showFossDialog.
+  - wrong: "FossButton(onPressed: () => Navigator.pop(context), child: Text('Save'))"
+    right: "FossButton(onPressed: () => Navigator.pop(context, true), child: const Text('Save'))"
+    why: Pass the result to Navigator.pop so the showFossDialog future resolves to it.

@@ -1,0 +1,38 @@
+tags: [select, dropdown, picker, input, form, single, choice, listbox]
+whenToUse: >-
+  A pick-one-from-a-short-list control with no typing. The trigger shows the
+  chosen label or a placeholder; tapping it opens a popup and a pick closes it.
+  For several picks use FossMultiSelect. When the list is long enough to warrant
+  filtering by typing, use FossCombobox instead.
+conventions:
+  do:
+    - Type the control on its value, FossSelect<T>, and pass options as
+      List<FossSelectItem<T>>.
+    - Drive selection through value plus onChanged; it is controlled, so rebuild
+      on the callback.
+    - Set the trigger height with size; it is a FossSelectSize enum.
+    - Retheme globally through FossThemeData; the look flows from the theme.
+    - For a genuine one-off, pass a FossSelectStyle to style.
+    - "Disable a single option with FossSelectItem(enabled: false); disable the
+      whole field with enabled false or a null onChanged."
+    - Show a validation message with errorText, which also recolors the border.
+  dont:
+    - Do not pass color, borderRadius, or padding; those params do not exist. Use
+      style or the theme.
+    - Do not pass a String or bool for size; it is an enum.
+    - Do not reach for FossSelect when the user needs to type to filter; that is
+      FossCombobox.
+    - Do not expect multiple selection here; the value is a single T, not a Set.
+commonMistakes:
+  - wrong: "FossSelect<String>(value: plan, items: ['Monthly', 'Yearly'], onChanged: _set)"
+    right: "FossSelect<String>(value: plan, items: const [FossSelectItem(value: 'monthly', label: 'Monthly'), FossSelectItem(value: 'yearly', label: 'Yearly')], onChanged: _set)"
+    why: items is List<FossSelectItem<T>>, not a list of raw strings.
+  - wrong: "FossSelect<String>(values: picks, items: items, onChanged: _set)"
+    right: "FossSelect<String>(value: pick, items: items, onChanged: _set)"
+    why: FossSelect holds one value; the values set belongs to FossMultiSelect.
+  - wrong: "FossSelect<String>(size: 'sm', items: items)"
+    right: "FossSelect<String>(size: FossSelectSize.sm, items: items)"
+    why: size is the FossSelectSize enum, not a string.
+  - wrong: "FossSelect<String>(borderRadius: 12, items: items)"
+    right: "FossSelect<String>(style: const FossSelectStyle(borderRadius: 12), items: items)"
+    why: There is no per-instance borderRadius param; override through style.

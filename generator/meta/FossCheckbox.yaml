@@ -1,0 +1,42 @@
+tags: [checkbox, toggle, form, boolean, tristate, indeterminate, consent, select]
+whenToUse: >-
+  A standalone on / off toggle with an optional label and description, or the
+  indeterminate state when a parent covers a partial selection. For a set of
+  options the user can pick several of, wrap FossCheckboxItem children in a
+  FossCheckboxGroup instead of scattering standalone checkboxes.
+conventions:
+  do:
+    - Drive value as a tristate bool? (true, false, or null for indeterminate)
+      and update state in onChanged, which reports the new definite bool.
+    - Set value to null yourself for the indeterminate minus; the checkbox never
+      emits null.
+    - Add a label and optional description instead of pairing the box with a
+      separate Text widget.
+    - Mark invalid with errorText; a non-null value shows the caption and flags
+      it for assistive tech.
+    - For a multi-select set, use FossCheckboxGroup<T> holding a Set<T> of
+      values with FossCheckboxItem<T> children.
+    - Pick the group look with variant (plain or card), both enum values.
+    - For a one-off, pass a FossCheckboxStyle to style; retheme globally through
+      FossThemeData.
+  dont:
+    - Do not pass color, borderColor, or borderRadius; those params do not exist.
+      Restyle via FossCheckboxStyle or the theme.
+    - Do not wrap the checkbox in a Container or GestureDetector to restyle or
+      add a tap; label and onChanged already handle both.
+    - Do not use FossCheckbox for a single choice from a set; that is FossRadio.
+    - Do not place a FossCheckboxItem outside a FossCheckboxGroup; it throws.
+    - Do not mutate the values Set in place; return a new Set from onChanged.
+commonMistakes:
+  - wrong: "FossCheckbox(value: accepted, onChanged: (v) {}, color: Colors.blue)"
+    right: "FossCheckbox(value: accepted, onChanged: (v) => setState(() => accepted = v), style: const FossCheckboxStyle(checkedColor: Color(0xFF2563EB)))"
+    why: There is no color param; the checked fill comes from the theme or FossCheckboxStyle.
+  - wrong: "FossCheckbox(value: true, onChanged: (v) {}, tristate: true)"
+    right: "FossCheckbox(value: null, onChanged: (v) {})"
+    why: There is no tristate flag; value is already bool?, and null renders the indeterminate state.
+  - wrong: "FossCheckboxItem(value: 'a', label: 'A')"
+    right: "FossCheckboxGroup<String>(values: selected, onChanged: (next) => setState(() => selected = next), children: const [FossCheckboxItem(value: 'a', label: 'A')])"
+    why: A FossCheckboxItem must live inside a FossCheckboxGroup of the same type or it throws at build.
+  - wrong: "FossCheckboxGroup(variant: 'card', values: {}, children: [...])"
+    right: "FossCheckboxGroup(variant: FossCheckboxGroupVariant.card, values: {}, children: [...])"
+    why: variant is an enum, not a string.

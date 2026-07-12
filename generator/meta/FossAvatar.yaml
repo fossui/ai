@@ -1,0 +1,30 @@
+tags: [avatar, user, profile, image, initials, monogram, layout]
+whenToUse: >-
+  A user's stand-in: a fixed-size circle showing a profile image that degrades
+  to a fallback glyph (usually initials) while loading, when absent, or on
+  failure. Static and non-interactive; wrap it yourself if you need a tap.
+conventions:
+  do:
+    - Pass image as an ImageProvider (NetworkImage, AssetImage), not a URL string or a Widget.
+    - Give a fallback, usually Text initials, so a missing or dead image degrades instead of showing an empty circle.
+    - Pick the circle diameter with size; it is an enum and also steps the fallback text.
+    - Set semanticLabel to name the person; leaving it null marks the avatar decorative.
+    - For a one-off tint, pass a FossAvatarStyle to style; retheme globally through FossThemeData otherwise.
+  dont:
+    - Do not pass color, backgroundColor, radius, or width params to the constructor; they do not exist.
+    - Do not pass a raw String or double for size; it is FossAvatarSize.
+    - Do not add an onTap or onPressed; the avatar is static, wrap it in your own gesture detector.
+    - Do not hand image a Widget; the slot is an ImageProvider, and the Widget goes in fallback.
+commonMistakes:
+  - wrong: "FossAvatar(image: 'https://example.com/v.png')"
+    right: "FossAvatar(image: NetworkImage('https://example.com/v.png'), fallback: const Text('VL'))"
+    why: image is an ImageProvider, not a URL string; a bare string does not compile.
+  - wrong: "FossAvatar(image: img, size: 40)"
+    right: "FossAvatar(image: img, size: FossAvatarSize.xl)"
+    why: size is an enum, not a pixel value; each case fixes the diameter.
+  - wrong: "FossAvatar(image: img, backgroundColor: Colors.grey)"
+    right: "FossAvatar(image: img, style: const FossAvatarStyle(fallbackColor: Color(0xFFE5E7EB)))"
+    why: there is no per-instance color param; overrides live on FossAvatarStyle passed to style.
+  - wrong: "FossAvatar(image: img, onTap: openProfile)"
+    right: "GestureDetector(onTap: openProfile, child: FossAvatar(image: img))"
+    why: the avatar is non-interactive and has no tap callback; add the gesture yourself.

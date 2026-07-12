@@ -1,0 +1,33 @@
+tags: [feedback, progress, bar, determinate, loading, percentage, upload]
+whenToUse: >-
+  A determinate progress bar for a task whose completion you can measure: value
+  is the filled fraction in 0..1. Reach for it when you know how far a task has
+  run; when you cannot measure it, use FossSpinner for indeterminate progress. It
+  is static and non-interactive.
+conventions:
+  do:
+    - Pass value as a fraction in 0..1; out-of-range input is clamped.
+    - Format the readout yourself and pass it as valueLabel, for example '40%' or '3 of 8'.
+    - Set label to name the task at the start of the row above the track.
+    - Set semanticLabel when there is no visible label, so assistive tech names the bar.
+    - Retheme the track and fill colors globally through FossThemeData.
+    - For a genuine one-off, pass a FossProgressStyle to style.
+  dont:
+    - Do not pass a percentage like 40 as value; the range is 0..1, so 40 clamps to full.
+    - Do not pass color, trackColor, or fillColor as constructor params; restyle via FossProgressStyle or the theme.
+    - Do not use FossProgress when the fraction is unknown; use FossSpinner instead.
+    - Do not expect value to compute its own percent text; valueLabel is caller-formatted.
+    - Do not attach a tap handler; the bar is static and non-interactive.
+commonMistakes:
+  - wrong: "FossProgress(value: 40)"
+    right: "FossProgress(value: 0.4, valueLabel: '40%')"
+    why: value is a 0..1 fraction, so 40 clamps to a full bar; format the percent text yourself.
+  - wrong: "FossProgress(value: 0.4, valueLabel: 40)"
+    right: "FossProgress(value: 0.4, valueLabel: '40%')"
+    why: valueLabel is a String the caller formats, not a number.
+  - wrong: "FossProgress()  // no known fraction, wanted a spinner"
+    right: "const FossSpinner()"
+    why: FossProgress is determinate and requires value; use FossSpinner when the fraction is unknown.
+  - wrong: "FossProgress(value: 0.4, fillColor: Colors.green)"
+    right: "FossProgress(value: 0.4, style: const FossProgressStyle(fillColor: Color(0xFF16A34A)))"
+    why: There is no fillColor param on the constructor; pass it through FossProgressStyle, or retheme.

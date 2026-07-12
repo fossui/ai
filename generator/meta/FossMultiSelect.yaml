@@ -1,0 +1,38 @@
+tags: [multiselect, select, dropdown, picker, input, form, multiple, checkbox, listbox]
+whenToUse: >-
+  A pick-several-from-a-short-list control with no typing. Each row carries a
+  checkbox, a pick toggles it and keeps the popup open, and the trigger shows a
+  count of picks. For a single choice use FossSelect. When the list is long
+  enough to warrant filtering by typing, use FossMultiCombobox.
+conventions:
+  do:
+    - Type the control on its value, FossMultiSelect<T>, with options as
+      List<FossSelectItem<T>>.
+    - Hold selection as a Set<T> in values and rebuild on onChanged; it is
+      controlled.
+    - Rebuild the value from the set the callback hands you, do not mutate the
+      old set in place.
+    - Set the trigger height with the size enum, FossSelectSize.
+    - Reword the count with selectionLabel, for example for another language.
+    - For a one-off look, pass a FossSelectStyle to style; retheme globally with
+      FossThemeData.
+  dont:
+    - Do not pass color, borderRadius, or padding; those params do not exist.
+    - Do not pass value or onChanged with a single T; multi-select works over a
+      Set<T>.
+    - Do not pass a String for size; it is an enum.
+    - Do not use FossMultiSelect when the user should type to filter; that is
+      FossMultiCombobox.
+commonMistakes:
+  - wrong: "FossMultiSelect<String>(value: tag, items: items, onChanged: _set)"
+    right: "FossMultiSelect<String>(values: tags, items: items, onChanged: (next) => setState(() => tags = next))"
+    why: Multi-select is controlled by a values Set and a Set callback, not a single value.
+  - wrong: "FossMultiSelect<String>(items: ['Design', 'Eng'], values: tags, onChanged: _set)"
+    right: "FossMultiSelect<String>(items: const [FossSelectItem(value: 'design', label: 'Design'), FossSelectItem(value: 'eng', label: 'Engineering')], values: tags, onChanged: _set)"
+    why: items is List<FossSelectItem<T>>, not raw strings.
+  - wrong: "onChanged: (next) { tags.add(value); }"
+    right: "onChanged: (next) => setState(() => tags = next)"
+    why: Selection is controlled; assign the set the callback returns and rebuild.
+  - wrong: "FossMultiSelect<String>(size: 'lg', items: items)"
+    right: "FossMultiSelect<String>(size: FossSelectSize.lg, items: items)"
+    why: size is the FossSelectSize enum, not a string.

@@ -1,0 +1,39 @@
+tags: [drawer, sheet, panel, overlay, modal, side, bottom-sheet, filters]
+whenToUse: >-
+  An edge-anchored modal panel that slides in from a screen edge and can be
+  dragged back off it to dismiss: filters, a menu, or supplementary detail. Use
+  FossDialog for a centered or bottom-sheet message or task, and FossAlertDialog
+  when the choice must be made and cannot be dismissed.
+conventions:
+  do:
+    - Open it with showFossDrawer and build FossDrawer inside the builder.
+    - Choose the anchoring edge with side on showFossDrawer; it is a FossDrawerSide
+      enum, and the surface reads it back so its corners and drag axis match.
+    - Return a result by popping the route with Navigator.pop(context, value);
+      showFossDrawer resolves to that value.
+    - Put actions in the actions list as FossButton widgets; they align trailing.
+    - Set corners with variant (FossDrawerVariant) and the footer with
+      footerVariant (FossDrawerFooterVariant); both are enums.
+    - Turn on the drag handle with showHandle and the corner close with showCloseButton.
+    - Retheme globally through FossThemeData, or pass a FossDrawerStyle to style
+      for a one-off.
+  dont:
+    - Do not set the edge on the widget; side lives on showFossDrawer, not the
+      FossDrawer constructor.
+    - Do not push FossDrawer into the tree; open it through showFossDrawer.
+    - Do not pass color, borderRadius, or padding; override through FossDrawerStyle
+      or the theme.
+    - Do not pass a String for side, variant, or footerVariant; they are enums.
+commonMistakes:
+  - wrong: "FossDrawer(side: FossDrawerSide.right, content: Filters())"
+    right: "showFossDrawer(context: context, side: FossDrawerSide.right, builder: (context) => const FossDrawer(content: Filters()))"
+    why: side is set on showFossDrawer, not on the widget; the surface inherits it from the route.
+  - wrong: "showModalBottomSheet(context: context, builder: (_) => FossDrawer(content: Body()))"
+    right: "showFossDrawer(context: context, builder: (context) => const FossDrawer(content: Body()))"
+    why: FossDrawer is opened by showFossDrawer, which sets the anchored transition, scrim, and drag-to-dismiss.
+  - wrong: "FossDrawer(variant: 'straight', content: Body())"
+    right: "FossDrawer(variant: FossDrawerVariant.straight, content: const Body())"
+    why: variant is a FossDrawerVariant enum, not a string.
+  - wrong: "FossDrawer(borderRadius: 12, content: Body())"
+    right: "FossDrawer(content: const Body(), style: const FossDrawerStyle(borderRadius: 12))"
+    why: There is no borderRadius param; per-instance visuals go through FossDrawerStyle.

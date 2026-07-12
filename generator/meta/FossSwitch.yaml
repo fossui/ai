@@ -1,0 +1,38 @@
+tags: [switch, toggle, boolean, setting, on-off, form, instant]
+whenToUse: >-
+  An instant on / off toggle that commits the moment it is flipped, for a
+  setting that takes effect right away (Wi-Fi, notifications). For a choice that
+  is confirmed later with the rest of a form, prefer FossCheckbox; for one
+  option from a set, use FossRadio.
+conventions:
+  do:
+    - Drive value (a plain bool, required) and flip it in onChanged, which fires
+      on a tap, a drag, or Space / Enter.
+    - Disable by passing a null onChanged; that dims the control and drops the
+      pointer.
+    - Give a semanticLabel; the switch carries no visible text.
+    - Lay out any label yourself in the surrounding row; the switch is only the
+      control.
+    - For a one-off, pass a FossSwitchStyle to style; retheme globally through
+      FossThemeData.
+  dont:
+    - Do not look for an enabled param; a null onChanged is the only disable.
+    - Do not pass a label param; the switch has none. Place your own Text beside
+      it.
+    - Do not pass activeColor, trackColor, or thumbColor as constructor args;
+      restyle via FossSwitchStyle or the theme.
+    - Do not wrap the switch in a Container or GestureDetector to add a tap;
+      onChanged already handles tap, drag, and keyboard.
+commonMistakes:
+  - wrong: "FossSwitch(value: on, onChanged: (v) {}, enabled: false)"
+    right: "FossSwitch(value: on, onChanged: null)"
+    why: There is no enabled param; passing a null onChanged disables the switch.
+  - wrong: "FossSwitch(value: on, onChanged: (v) {}, activeColor: Colors.green)"
+    right: "FossSwitch(value: on, onChanged: (v) {}, style: const FossSwitchStyle(activeTrackColor: Color(0xFF16A34A)))"
+    why: There is no activeColor param; the on-track color comes from the theme or FossSwitchStyle.
+  - wrong: "FossSwitch(value: on, onChanged: (v) {}, label: 'Wi-Fi')"
+    right: "Row(children: [const Text('Wi-Fi'), FossSwitch(value: on, semanticLabel: 'Wi-Fi', onChanged: (v) {})])"
+    why: FossSwitch has no label; add your own Text in the row and name it with semanticLabel.
+  - wrong: "FossSwitch(onChanged: (v) {})"
+    right: "FossSwitch(value: wifiOn, onChanged: (v) {})"
+    why: value is required; the switch is controlled and renders whatever you pass.

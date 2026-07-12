@@ -1,0 +1,39 @@
+tags: [autocomplete, combobox, search, suggestions, input, form, filter, typeahead, freetext]
+whenToUse: >-
+  A text field that suggests as you type, where the value is the field string,
+  not a fixed option. The items are hints, so the field accepts any typed value
+  and has no selection indicator. Use it for free text with suggestions, for
+  example a search or a tag entry. When the result must be one of the options
+  use FossCombobox; for several picks shown as chips use FossMultiCombobox.
+conventions:
+  do:
+    - Pass suggestions as a plain List<String>; there is no item type here.
+    - Read the value through onChanged, which fires on every keystroke and on a
+      pick, with the current String.
+    - Own the text with a controller when you need to read or set it; it is
+      created and disposed internally when null.
+    - Set the field height with size, a FossTextFieldSize enum.
+    - Show the opening chevron with showTrigger and a clear button with showClear.
+    - Customize matching with filter and the empty caption with emptyText.
+    - Retheme globally with FossThemeData; for a one-off pass a FossComboboxStyle
+      to style.
+  dont:
+    - Do not pass FossComboboxItem or FossSelectItem; items is List<String>.
+    - Do not expect a value or onSelected callback; the value is the field text
+      via onChanged.
+    - Do not pass color, borderRadius, or padding; those params do not exist.
+    - Do not use FossAutocomplete when the value must be one of the options; that
+      is FossCombobox.
+commonMistakes:
+  - wrong: "FossAutocomplete(items: const [FossComboboxItem(value: 'a', label: 'Apple')], onChanged: _set)"
+    right: "FossAutocomplete(items: const ['Apple', 'Banana'], onChanged: _set)"
+    why: Autocomplete filters plain strings; it takes no item objects.
+  - wrong: "FossAutocomplete(value: fruit, items: items, onSelected: _set)"
+    right: "FossAutocomplete(items: items, onChanged: (value) => setState(() => fruit = value))"
+    why: The value is the field text reported through onChanged; there is no onSelected.
+  - wrong: "FossAutocomplete(size: 'lg', items: items)"
+    right: "FossAutocomplete(size: FossTextFieldSize.lg, items: items)"
+    why: size is the FossTextFieldSize enum, not a string.
+  - wrong: "FossAutocomplete(items: items, borderRadius: 12)"
+    right: "FossAutocomplete(items: items, style: const FossComboboxStyle(borderRadius: 12))"
+    why: There is no per-instance borderRadius param; override through style.

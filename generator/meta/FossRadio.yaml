@@ -1,0 +1,39 @@
+tags: [radio, option, form, single-choice, select, group, mutually-exclusive]
+whenToUse: >-
+  One choice from a small, mutually exclusive set. Always a FossRadio<T> option
+  inside a FossRadioGroup<T>; the group owns the selection and the callback. For
+  picking several at once use FossCheckboxGroup, and for an on / off toggle use
+  FossSwitch or FossCheckbox.
+conventions:
+  do:
+    - Wrap FossRadio<T> children in a FossRadioGroup<T> of the same value type.
+    - Hold the selection on the group as groupValue and update it in the group's
+      onChanged, which reports the tapped option's value.
+    - Give each FossRadio a value that identifies it within the group, compared
+      by ==; add an optional label and description.
+    - Pick the look with the group's variant (plain or card), both enum values.
+    - Set errorText on the group to mark every option invalid, and enabled to
+      dim and disable the whole set.
+    - For a one-off, pass a FossRadioStyle to style; retheme globally through
+      FossThemeData.
+  dont:
+    - Do not put onChanged or a selected flag on FossRadio; selection lives on
+      the group.
+    - Do not use a standalone FossRadio; it throws outside a FossRadioGroup.
+    - Do not pass color, borderColor, or dotColor as constructor args; restyle
+      via FossRadioStyle or the theme.
+    - Do not reach for FossRadio when several options may be selected; that is
+      FossCheckboxGroup.
+commonMistakes:
+  - wrong: "FossRadio(value: 'a', selected: true, onChanged: (v) {})"
+    right: "FossRadioGroup<String>(groupValue: plan, onChanged: (v) => setState(() => plan = v), children: const [FossRadio(value: 'a', label: 'A')])"
+    why: FossRadio has no onChanged or selected; the enclosing FossRadioGroup owns selection and the callback.
+  - wrong: "FossRadio<String>(value: 'a', label: 'A')  // rendered on its own"
+    right: "FossRadioGroup<String>(groupValue: plan, onChanged: (v) {}, children: const [FossRadio(value: 'a', label: 'A')])"
+    why: A FossRadio must live inside a FossRadioGroup of the same type or it throws at build.
+  - wrong: "FossRadioGroup(variant: 'card', children: [...])"
+    right: "FossRadioGroup(variant: FossRadioGroupVariant.card, children: [...])"
+    why: variant is an enum, not a string.
+  - wrong: "FossRadio(value: 'a', label: 'A', color: Colors.green)"
+    right: "FossRadio(value: 'a', label: 'A', style: const FossRadioStyle(checkedColor: Color(0xFF16A34A)))"
+    why: There is no color param; the checked color comes from the theme or FossRadioStyle.

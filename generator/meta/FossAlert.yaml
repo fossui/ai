@@ -1,0 +1,33 @@
+tags: [feedback, alert, callout, banner, status, notice, inline]
+whenToUse: >-
+  A static inline callout that stays on the surface: a status glyph, a title, an
+  optional description, and optional actions. Reach for it to flag a state in
+  place; for a modal that demands a decision use FossAlertDialog, and for a
+  compact one-word tag use FossBadge.
+conventions:
+  do:
+    - Set the status with variant; it drives the border, fill, and leading glyph.
+    - Pass title and description as widgets, usually Text; both are optional.
+    - Put action widgets, typically FossButtons, in actions; an empty list hides them.
+    - Retheme colors, type, radius, and spacing globally through FossThemeData.
+    - For a genuine one-off, pass a FossAlertStyle to style.
+    - Override the leading glyph with any icon widget; it inherits the variant accent.
+  dont:
+    - Do not pass color, borderColor, or borderRadius as constructor params; they do not exist.
+    - Do not wrap the alert in a Container to restyle it; change the theme or pass a FossAlertStyle.
+    - Do not pass a String for variant; it is the FossAlertVariant enum.
+    - Do not expect an icon on the neutral variant; only status variants carry a default glyph.
+    - Do not attach a tap handler; the alert is static and non-interactive.
+commonMistakes:
+  - wrong: "FossAlert(variant: 'error', title: Text('Failed'))"
+    right: "FossAlert(variant: FossAlertVariant.error, title: const Text('Failed'))"
+    why: variant is an enum, not a string.
+  - wrong: "FossAlert(color: Colors.red, title: Text('Failed'))"
+    right: "FossAlert(variant: FossAlertVariant.error, title: const Text('Failed'))"
+    why: There is no color param; the status color comes from the variant.
+  - wrong: "FossAlert(variant: FossAlertVariant.neutral, title: Text('Note'))  // expecting an icon"
+    right: "FossAlert(variant: FossAlertVariant.info, title: const Text('Note'))"
+    why: The neutral variant has no default glyph; use a status variant or pass icon.
+  - wrong: "FossAlert(title: Text('Retry'), onTap: _retry)"
+    right: "FossAlert(title: const Text('Save failed'), actions: [FossButton(onPressed: _retry, child: const Text('Retry'))])"
+    why: The alert has no tap handler; put interactive controls in actions.

@@ -1,0 +1,27 @@
+tags: [feedback, spinner, loading, indeterminate, busy, activity, arc]
+whenToUse: >-
+  An indeterminate loading indicator: an open arc that spins continuously while a
+  task of unknown length runs. Reach for it when you cannot measure completion;
+  when you can, use FossProgress for a determinate bar.
+conventions:
+  do:
+    - Use it whenever the wait has no measurable fraction.
+    - Set size in logical pixels to fit the surrounding content.
+    - Leave color unset to track the theme foreground token, or pass a Color to match a specific surface.
+    - Set semanticLabel to describe what is loading; it defaults to 'Loading'.
+    - Reach for FossProgress instead once you can report a 0..1 fraction.
+  dont:
+    - Do not use a spinner when the completion fraction is known; use FossProgress.
+    - Do not pass a String for size; it is a double in logical pixels.
+    - Do not stop it manually for reduced motion; it already freezes when animations are disabled.
+    - Do not expect a style object; FossSpinner has no FossSpinnerStyle, only size, color, and semanticLabel.
+commonMistakes:
+  - wrong: "FossSpinner(value: 0.4)"
+    right: "FossProgress(value: 0.4)"
+    why: A spinner is indeterminate and has no value param; use FossProgress when the fraction is known.
+  - wrong: "FossSpinner(size: '18')"
+    right: "const FossSpinner(size: 18)"
+    why: size is a double in logical pixels, not a string.
+  - wrong: "FossSpinner(style: FossSpinnerStyle(color: Colors.white))"
+    right: "const FossSpinner(color: Color(0xFFFFFFFF))"
+    why: There is no FossSpinnerStyle; the color is a direct constructor param on the spinner.

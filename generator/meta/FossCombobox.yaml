@@ -1,0 +1,41 @@
+tags: [combobox, autocomplete, search, dropdown, picker, input, form, filter, single, typeahead]
+whenToUse: >-
+  A text field with a dropdown of predefined options that filters as you type,
+  and picking one selects that option. Use it when the list is long enough that
+  typing to narrow it helps and the result must be one of the given options. For
+  selection without typing use FossSelect. For several picks shown as chips use
+  FossMultiCombobox. For free text that is not constrained to the list use
+  FossAutocomplete.
+conventions:
+  do:
+    - Type the control on its value, FossCombobox<T>, with options as
+      List<FossComboboxItem<T>>.
+    - Drive selection through value plus onSelected; it is controlled, so rebuild
+      on the callback.
+    - Set the field height with size, a FossTextFieldSize enum.
+    - Customize matching by passing a filter, (label, query) returning bool; the
+      default is a case-insensitive substring match.
+    - Set emptyText for the caption shown when nothing matches.
+    - Retheme globally with FossThemeData; for a one-off pass a FossComboboxStyle
+      to style.
+  dont:
+    - Do not use FossSelectItem here; combobox options are FossComboboxItem<T>.
+    - Do not pass color, borderRadius, or padding; those params do not exist.
+    - Do not pass a String for size; FossTextFieldSize is an enum.
+    - Do not use onChanged; the single-select callback is onSelected. onChanged
+      belongs to FossAutocomplete.
+    - Do not reach for FossCombobox when the value can be arbitrary text; that is
+      FossAutocomplete.
+commonMistakes:
+  - wrong: "FossCombobox<String>(value: team, items: [FossSelectItem(value: 'a', label: 'Design')], onSelected: _set)"
+    right: "FossCombobox<String>(value: team, items: const [FossComboboxItem(value: 'a', label: 'Design')], onSelected: _set)"
+    why: Combobox options are FossComboboxItem, not FossSelectItem.
+  - wrong: "FossCombobox<String>(value: team, items: items, onChanged: _set)"
+    right: "FossCombobox<String>(value: team, items: items, onSelected: (v) => setState(() => team = v))"
+    why: The single-select callback is onSelected; onChanged is FossAutocomplete's text callback.
+  - wrong: "FossCombobox<String>(items: ['Design', 'Eng'], onSelected: _set)"
+    right: "FossCombobox<String>(items: const [FossComboboxItem(value: 'design', label: 'Design'), FossComboboxItem(value: 'eng', label: 'Engineering')], onSelected: _set)"
+    why: items is List<FossComboboxItem<T>>, not raw strings.
+  - wrong: "FossCombobox<String>(size: 'md', items: items)"
+    right: "FossCombobox<String>(size: FossTextFieldSize.md, items: items)"
+    why: size is the FossTextFieldSize enum, not a string.

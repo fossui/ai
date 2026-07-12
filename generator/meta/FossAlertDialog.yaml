@@ -1,0 +1,39 @@
+tags: [alert, dialog, modal, confirm, destructive, blocking, overlay]
+whenToUse: >-
+  A blocking modal that interrupts to force a decision the user cannot dismiss:
+  confirming a destructive action, an expired session, or anything that must be
+  acknowledged. Use FossDialog instead when a tap outside may cancel the task,
+  and FossDrawer for an edge-anchored panel.
+conventions:
+  do:
+    - Open it with showFossAlertDialog and build FossAlertDialog in the builder.
+    - Always supply at least one action; actions is required and must be non-empty.
+    - Give every path out through an action button; there is no close affordance
+      and the scrim will not dismiss.
+    - Pop each action with its result via Navigator.pop(context, value); the
+      showFossAlertDialog future resolves to it, and Back or Esc pop with null.
+    - Set footerVariant with the FossDialogFooterVariant enum.
+    - Retheme globally through FossThemeData, or pass a FossAlertDialogStyle to
+      style for a one-off.
+  dont:
+    - Do not construct it with an empty actions list; an assert rejects it since
+      a non-dismissible dialog needs a way out.
+    - Do not reach for showCloseButton, closeIcon, or barrierDismissible; the
+      alert has no close affordance and stays modal by design. Presentation is
+      set on showFossAlertDialog, not the widget.
+    - Do not push FossAlertDialog into the tree; open it through showFossAlertDialog.
+    - Do not pass color, borderRadius, or padding; override through
+      FossAlertDialogStyle or the theme.
+commonMistakes:
+  - wrong: "FossAlertDialog(title: Text('Delete?'))"
+    right: "FossAlertDialog(title: const Text('Delete?'), actions: [FossButton(onPressed: () => Navigator.pop(context), child: const Text('OK'))])"
+    why: actions is required and asserted non-empty; without one there is no way out.
+  - wrong: "showFossDialog(context: context, builder: (context) => FossAlertDialog(actions: [ok]))"
+    right: "showFossAlertDialog(context: context, builder: (context) => FossAlertDialog(actions: [ok]))"
+    why: showFossAlertDialog fixes the scrim as non-dismissible; showFossDialog would let a tap outside close it.
+  - wrong: "FossAlertDialog(showCloseButton: false, actions: [ok])"
+    right: "FossAlertDialog(actions: [ok])"
+    why: There is no showCloseButton param; the alert has no close affordance by design.
+  - wrong: "FossAlertDialog(style: const FossDialogStyle(maxWidth: 640), actions: [ok])"
+    right: "FossAlertDialog(style: const FossAlertDialogStyle(maxWidth: 640), actions: [ok])"
+    why: The style slot takes a FossAlertDialogStyle; it carries the same fields and passes through to the composed dialog.

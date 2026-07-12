@@ -1,0 +1,31 @@
+tags: [card, container, surface, panel, layout, header, footer]
+whenToUse: >-
+  A static, bordered, rounded surface that groups an optional header (title,
+  description, trailing action), a content body, and a footer. Reach for it to
+  frame a block of content instead of a bare Container. The surface renders, it
+  does not respond to taps.
+conventions:
+  do:
+    - Fill only the slots you need; every slot is optional and a content-only card is valid.
+    - Put a title and description in the header slots; both take any Widget, so Text is typical.
+    - Pin a header control (a FossButton, a menu) in action; it sits in the top trailing corner.
+    - Put the primary actions in footer, commonly a right-aligned Row of buttons.
+    - For a one-off surface tweak, pass a FossCardStyle to style; retheme globally through FossThemeData otherwise.
+  dont:
+    - Do not reach for a raw Container with a manual border and shadow; use FossCard so the surface stays consistent.
+    - Do not pass color, borderRadius, padding, or elevation to the constructor; those params do not exist.
+    - Do not add your own Padding inside each slot to space it; the card already insets every slot and tightens shared seams.
+    - Do not wrap the card in a gesture handler expecting built-in press feedback; it is static.
+commonMistakes:
+  - wrong: "Container(decoration: BoxDecoration(border: Border.all(), borderRadius: BorderRadius.circular(12)), child: body)"
+    right: "FossCard(content: body)"
+    why: a hand-rolled Container drifts from the design; FossCard carries the border, radius, and shadow.
+  - wrong: "FossCard(content: body, color: Colors.white, borderRadius: 16)"
+    right: "FossCard(content: body, style: const FossCardStyle(backgroundColor: Color(0xFFFFFFFF), borderRadius: 16))"
+    why: there are no per-instance color or radius params; overrides live on FossCardStyle passed to style.
+  - wrong: "FossCard(content: Padding(padding: EdgeInsets.all(24), child: body))"
+    right: "FossCard(content: body)"
+    why: the card insets every slot itself; adding padding double-pads the content.
+  - wrong: "FossCard(child: body)"
+    right: "FossCard(content: body)"
+    why: the body slot is named content; there is no child param.

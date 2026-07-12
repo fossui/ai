@@ -1,0 +1,27 @@
+tags: [toaster, toast, host, provider, overlay, notification, mount]
+whenToUse: >-
+  The host that displays toasts. Mount it once near the app root, above
+  everything that needs to raise a toast. showFossToast walks up to the nearest
+  FossToaster, so any subtree below it can raise a toast without threading a
+  controller through. Without a FossToaster ancestor, showFossToast throws.
+conventions:
+  do:
+    - Wrap the app subtree once, high in the tree, above every screen that raises a toast.
+    - Raise toasts from below it with showFossToast(context, toast).
+    - Reach the shared controller with FossToastScope.of(context) to update, dismiss, or clear by id.
+    - Let the toaster own the controller lifecycle; it creates and disposes one internally.
+  dont:
+    - Do not mount a FossToaster per screen or per route; one near the root serves the whole app.
+    - Do not construct FossToastController yourself to pass in; FossToaster takes only child and owns the queue.
+    - Do not call showFossToast from a context with no FossToaster ancestor; it will throw.
+    - Do not wrap only a leaf widget; a toaster below the caller is not an ancestor of it.
+commonMistakes:
+  - wrong: "showFossToast(context, const FossToast(title: Text('Saved'))); // no FossToaster mounted"
+    right: "runApp(FossToaster(child: MyApp()));\n// then anywhere below: showFossToast(context, const FossToast(title: Text('Saved')));"
+    why: showFossToast requires a FossToaster ancestor; without one it throws.
+  - wrong: "FossToaster(controller: myController, child: MyApp())"
+    right: "FossToaster(child: MyApp())"
+    why: FossToaster takes only child; it creates and disposes its own controller.
+  - wrong: "Scaffold(body: FossToaster(child: content)) // per-screen"
+    right: "FossToaster(child: MaterialApp(home: HomeScreen()))"
+    why: Mount one toaster near the root; a per-screen toaster is not an ancestor of other screens.

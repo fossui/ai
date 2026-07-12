@@ -1,0 +1,32 @@
+tags: [feedback, badge, pill, tag, status, chip, count, label]
+whenToUse: >-
+  A compact, content-hugging pill that tags a count, a state, or a category.
+  Reach for it for a short inline marker; for a full-width status message use
+  FossAlert. It is static and non-interactive.
+conventions:
+  do:
+    - Pass label as a widget, usually a bare Text; the badge applies weight, color, and type step.
+    - Pick the color with variant (solid or soft tint) and the box with size; both are enums.
+    - Put any icon widget in leading or trailing; the slots are icon-agnostic, sized and dimmed by the badge.
+    - Set semanticLabel when the badge is the only carrier of meaning, so assistive tech announces the state.
+    - Retheme colors, type, and radius globally through FossThemeData.
+    - For a genuine one-off, pass a FossBadgeStyle to style.
+  dont:
+    - Do not pass color, borderRadius, or padding as constructor params; they do not exist.
+    - Do not pass a String or bool for variant or size; they are enums.
+    - Do not pass a String to label; it is a Widget, so wrap plain text in Text.
+    - Do not wrap the badge in a Container to restyle it; change the theme or pass a FossBadgeStyle.
+    - Do not attach a tap handler; the badge is static and non-interactive.
+commonMistakes:
+  - wrong: "FossBadge(label: 'New')"
+    right: "FossBadge(label: const Text('New'))"
+    why: label is a Widget, not a String.
+  - wrong: "FossBadge(label: Text('New'), variant: 'success')"
+    right: "FossBadge(label: const Text('New'), variant: FossBadgeVariant.success)"
+    why: variant is an enum, not a string.
+  - wrong: "FossBadge(label: Text('New'), size: 'lg')"
+    right: "FossBadge(label: const Text('New'), size: FossBadgeSize.lg)"
+    why: size is the FossBadgeSize enum, not a string or number.
+  - wrong: "FossBadge(label: Text('New'), backgroundColor: Colors.green)"
+    right: "FossBadge(label: const Text('New'), variant: FossBadgeVariant.success)"
+    why: There is no backgroundColor param on the constructor; pick a variant, or pass a FossBadgeStyle to style for a one-off.

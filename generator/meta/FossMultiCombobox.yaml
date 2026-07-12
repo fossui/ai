@@ -1,0 +1,38 @@
+tags: [multicombobox, combobox, multiselect, tags, chips, search, dropdown, input, form, filter, typeahead]
+whenToUse: >-
+  A combobox that holds several picks at once, shown as removable chips. Typing
+  filters the options, a pick toggles a chip and keeps the popup open, and
+  Backspace on the empty input removes the last chip. For a single pick use
+  FossCombobox. For several picks without typing use FossMultiSelect. For free
+  text rather than picks from a fixed list use FossAutocomplete.
+conventions:
+  do:
+    - Type the control on its value, FossMultiCombobox<T>, with options as
+      List<FossComboboxItem<T>>.
+    - Hold selection as a Set<T> in values and rebuild on onSelected; it is
+      controlled.
+    - Assign the set the callback returns; do not mutate the previous set.
+    - Set the field height with size, a FossTextFieldSize enum.
+    - Set removeLabel for the accessible label on each chip's remove button.
+    - Customize matching with filter and the empty caption with emptyText.
+    - Retheme globally with FossThemeData; for a one-off pass a FossComboboxStyle
+      to style.
+  dont:
+    - Do not use FossSelectItem here; options are FossComboboxItem<T>.
+    - Do not pass value or onSelected with a single T; this control works over a
+      Set<T>.
+    - Do not use onChanged; the callback is onSelected.
+    - Do not pass color, borderRadius, or padding; those params do not exist.
+commonMistakes:
+  - wrong: "FossMultiCombobox<String>(value: tag, items: items, onSelected: _set)"
+    right: "FossMultiCombobox<String>(values: tags, items: items, onSelected: (v) => setState(() => tags = v))"
+    why: Multi-select is controlled by a values Set and a Set callback, not a single value.
+  - wrong: "FossMultiCombobox<String>(values: tags, items: [FossSelectItem(value: 'a', label: 'Design')], onSelected: _set)"
+    right: "FossMultiCombobox<String>(values: tags, items: const [FossComboboxItem(value: 'a', label: 'Design')], onSelected: _set)"
+    why: Combobox options are FossComboboxItem, not FossSelectItem.
+  - wrong: "FossMultiCombobox<String>(values: tags, items: items, onChanged: _set)"
+    right: "FossMultiCombobox<String>(values: tags, items: items, onSelected: _set)"
+    why: The callback is onSelected; onChanged does not exist on this control.
+  - wrong: "FossMultiCombobox<String>(size: 'sm', items: items, values: tags)"
+    right: "FossMultiCombobox<String>(size: FossTextFieldSize.sm, items: items, values: tags)"
+    why: size is the FossTextFieldSize enum, not a string.

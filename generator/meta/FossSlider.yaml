@@ -1,0 +1,40 @@
+tags: [slider, range, value, form, volume, drag, continuous, stepped]
+whenToUse: >-
+  Pick a single double from a bounded range by dragging a thumb, for a value
+  where the exact number matters less than its position (volume, brightness).
+  Continuous by default; pass divisions to snap to equal steps.
+conventions:
+  do:
+    - Hold value yourself and update it in onChanged; the slider is controlled
+      and does not clamp the value you pass, so keep it within [min, max].
+    - Set min and max to bound the range; both default to 0 and 100.
+    - Pass divisions to snap to equal steps; leave it null for a continuous
+      slider.
+    - Bracket a drag with onChangeStart and onChangeEnd when you need the start
+      and final values.
+    - Disable with enabled false or a null onChanged.
+    - Give a semanticLabel; arrow keys step the value and Home / End jump to the
+      bounds.
+    - For a one-off, pass a FossSliderStyle to style; retheme globally through
+      FossThemeData.
+  dont:
+    - Do not expect the slider to clamp or store the value; it reports and you
+      own the state.
+    - Do not pass a String or double for divisions; it is an int count of steps.
+    - Do not pass trackColor or thumbColor as constructor args; restyle via
+      FossSliderStyle or the theme.
+    - Do not wrap the slider in a Container to size or restyle it; it fills its
+      width down to a min and reads geometry from the theme.
+commonMistakes:
+  - wrong: "FossSlider(value: v, onChanged: (x) {}, activeColor: Colors.blue)"
+    right: "FossSlider(value: v, onChanged: (x) {}, style: const FossSliderStyle(rangeColor: Color(0xFF2563EB)))"
+    why: There is no activeColor param; the filled range color comes from the theme or FossSliderStyle.
+  - wrong: "FossSlider(value: v, onChanged: (x) {}, divisions: 5.0)"
+    right: "FossSlider(value: v, onChanged: (x) {}, divisions: 5)"
+    why: divisions is an int number of steps, not a double.
+  - wrong: "FossSlider(value: 40, onChanged: (x) {}, min: 100, max: 0)"
+    right: "FossSlider(value: 40, onChanged: (x) {}, min: 0, max: 100)"
+    why: min must be <= max; an inverted range trips the assert.
+  - wrong: "FossSlider(value: v, onChanged: null)  // meant to be interactive"
+    right: "FossSlider(value: v, onChanged: (x) => setState(() => v = x))"
+    why: A null onChanged disables the slider; pass a callback to keep it interactive.

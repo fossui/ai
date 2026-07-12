@@ -1,0 +1,35 @@
+tags: [toast, notification, snackbar, transient, overlay, feedback, alert]
+whenToUse: >-
+  A transient notification that rises over the app and auto-dismisses. Use it for
+  a completed action, a background result, or a pending operation. FossToast is a
+  data object, not a widget: build one and hand it to showFossToast or a
+  FossToastController. For a persistent inline message that stays in the layout,
+  use FossAlert instead.
+conventions:
+  do:
+    - Raise a toast with showFossToast(context, toast), which returns an int id.
+    - Set the kind with variant; it is a FossToastVariant enum and tints the leading glyph.
+    - For a pending task, show a loading toast, then update its id to a success or error toast.
+    - Put a title, a description, or both; each is any Widget, not a String.
+    - Override the auto-dismiss delay with duration; it is ignored for the loading variant, which persists.
+    - Put any icon widget in icon to replace the default glyph; the slot is icon-agnostic.
+    - For a one-off look, pass a FossToastStyle to style; retheme globally via FossThemeData otherwise.
+  dont:
+    - Do not construct FossToast into the widget tree; it renders nothing on its own.
+    - Do not pass color, borderRadius, or padding to FossToast; those params do not exist.
+    - Do not pass a String or int for variant; it is a FossToastVariant enum.
+    - Do not set a duration on a loading toast expecting it to expire; loading persists until you update or dismiss it.
+    - Do not rebuild a toast to change it; keep its id and call update on the controller.
+commonMistakes:
+  - wrong: "Widget build(BuildContext context) => const FossToast(title: Text('Saved'));"
+    right: "showFossToast(context, const FossToast(title: Text('Saved')));"
+    why: FossToast is a message object, not a widget; it must be enqueued, not placed in the tree.
+  - wrong: "FossToast(variant: 'success', title: Text('Saved'))"
+    right: "FossToast(variant: FossToastVariant.success, title: Text('Saved'))"
+    why: variant is a FossToastVariant enum, not a string.
+  - wrong: "const FossToast(title: Text('Saved'), color: Colors.green)"
+    right: "const FossToast(variant: FossToastVariant.success, title: Text('Saved'))"
+    why: There is no color param; the status tint comes from the variant.
+  - wrong: "showFossToast(context, const FossToast(variant: FossToastVariant.loading, duration: Duration(seconds: 2)))"
+    right: "final id = showFossToast(context, const FossToast(variant: FossToastVariant.loading, title: Text('Saving')));\n// later: FossToastScope.of(context).update(id, const FossToast(variant: FossToastVariant.success, title: Text('Saved')));"
+    why: A loading toast persists and ignores duration; flip it to a result by updating its id.
