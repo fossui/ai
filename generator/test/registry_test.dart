@@ -150,6 +150,14 @@ void main() {
     });
   });
 
+  test('setup wires the dep and theme', () {
+    final setup = registry['setup']! as Map<String, Object?>;
+    expect(setup['pubspec'], startsWith('fossui: ^'));
+    expect(setup['material'], contains('FossThemeData.light.toThemeData()'));
+    expect(setup['nonMaterial'], contains('FossTheme('));
+    expect(setup['access'], 'context.fossTheme');
+  });
+
   test('llms.txt names every component', () {
     for (final c in components()) {
       expect(llms, contains(c['name']! as String));
