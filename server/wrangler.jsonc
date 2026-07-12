@@ -1,0 +1,12 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "fossui-mcp",
+  "main": "src/index.ts",
+  "compatibility_date": "2025-05-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "rules": [{ "type": "Text", "globs": ["**/*.txt"], "fallthrough": true }],
+  "durable_objects": {
+    "bindings": [{ "name": "FossuiMcp", "class_name": "FossuiMcp" }]
+  },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["FossuiMcp"] }]
+}
