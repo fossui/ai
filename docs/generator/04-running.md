@@ -3,7 +3,7 @@
 ## Running
 
 ```
-cd mcp/generator
+cd generator
 dart run bin/generate.dart      # writes build/registry.json and build/llms.txt
 dart test                       # regenerates, then asserts the invariants
 ```

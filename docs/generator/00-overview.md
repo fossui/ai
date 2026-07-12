@@ -5,7 +5,7 @@ single manifest the MCP server serves. It is the whole knowledge layer of the
 system: the server is a thin reader over its output and holds no understanding of
 its own. Get the generator right and the server is trivial.
 
-It lives in `mcp/generator/`, is written in Dart, and uses `package:analyzer`
+It lives in `generator/`, is written in Dart, and uses `package:analyzer`
 (the same engine `dart analyze` runs on) so it sees the package exactly as the
 compiler does.
 

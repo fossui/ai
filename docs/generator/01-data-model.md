@@ -10,18 +10,18 @@ one becomes the other.
    truth: constructors, parameters, enums, dartdoc comments, the token classes,
    and the annotations. Because the package lints `public_member_api_docs` as an
    error, this raw material is guaranteed present and current.
-2. **Sidecars** (`mcp/generator/meta/<Class>.yaml`). The only hand-authored
+2. **Sidecars** (`generator/meta/<Class>.yaml`). The only hand-authored
    input, one file per component, holding the judgment the API cannot express:
    `tags`, `whenToUse`, `conventions` (do/dont), `commonMistakes`. Reviewed like
    code. A missing sidecar yields a valid, judgment-light record. The schema is
-   documented in `mcp/generator/meta/README.md`.
+   documented in `generator/meta/README.md`.
 
-The generator reads the package as input and writes only into `mcp/`. It never
+The generator reads the package as input and writes only into `generator/build/`. It never
 edits the package.
 
 ## Outputs
 
-Two files, both under `mcp/generator/build/`:
+Two files, both under `generator/build/`:
 
 - **`registry.json`**: the structured manifest. Top level is `meta`, a
   `components` array, and a `tokens` object.
