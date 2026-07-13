@@ -39,7 +39,8 @@ import         package:fossui/fossui.dart
 summary        first prose paragraph of the class dartdoc
 constructors   [ { name, params: [ { name, type, required?, default?, doc? } ] } ]
 enums          { FossButtonVariant: [ { value, doc? } ], ... }
-companions     [ { name, kind: style|controller|item|scope|group, summary } ]
+companions     [ { name, kind: style|controller|item|scope|group, summary, constructors? } ]
+functions      [ { name, returns, params } ]   overlay launchers, e.g. showFossDialog
 examples       [ fenced dart snippets from the dartdoc ]
 urls           { docs, playground, preview: { light, dark } }
 tags           from the sidecar
@@ -52,12 +53,17 @@ The first eight fields are generated from the package and cannot drift. The last
 four come from the reviewed sidecar. That line, generated versus curated, is the
 core design boundary (see [design-decisions.md](03-design-decisions.md)).
 
+Each companion carries its own `constructors` (same shape as a component's), so
+the classes a component leans on (a group, an item, a style, a controller) are
+fully specified, not left to a guess.
+
 ### The token layer
 
 `tokens` holds the six families, const-evaluated to plain JSON:
 
 ```
 access       context.fossTheme
+types        { colors: "Color", radii: "double", typography: "TextStyle", shadows: "List<BoxShadow>", motion: "Duration", spacing: "double" }
 colors       { light: { role: "#AARRGGBB", ... }, dark: { ... } }
 radii        { sm: 6, md: 8, lg: 10, xl: 14, xl2: 16 }
 spacing      { unit: 4 }

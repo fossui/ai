@@ -25,17 +25,13 @@ foss_ui_package/  ─►  generator  ─►  registry.json  ─►  server, llms
 
 ```
 generator/   Dart tool: reads the package, emits registry.json and llms.txt
-docs/        architecture guide (start at docs/generator/00-overview.md)
-```
-
-Planned, all reading the same manifest:
-
-```
+docs/        architecture guide (start at docs/00-architecture.md)
 server/      MCP server (Cloudflare Worker) serving registry.json over the protocol
 skill/       Claude Code skill carrying the fossui idioms
 rules/       a CLAUDE.md / AGENTS.md snippet to paste into a project
-eval/        with and without harness that scores AI-written fossui code
 ```
+
+Every vehicle reads the one manifest, so none can drift.
 
 ## Generator
 
