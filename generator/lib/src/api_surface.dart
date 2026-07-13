@@ -16,6 +16,7 @@ class ApiSurface {
   ApiSurface._({
     required this.classes,
     required this.enums,
+    required this.functions,
     required this.primaries,
     required this.companions,
     required this.orphanItems,
@@ -28,6 +29,10 @@ class ApiSurface {
 
   /// Every public `Foss*` enum.
   final List<EnumElement> enums;
+
+  /// Public top-level `Foss*` functions, mainly the overlay launchers such as
+  /// `showFossDialog`.
+  final List<TopLevelFunctionElement> functions;
 
   /// Components: categorized classes that are not companions.
   final List<ClassElement> primaries;
@@ -59,6 +64,11 @@ class ApiSurface {
     final api = result.libraryElement.exportNamespace.definedNames2.values;
     final classes = api.whereType<ClassElement>().where(_isFoss).toList();
     final enums = api.whereType<EnumElement>().where(_isFoss).toList();
+    // Launchers like showFossDialog carry "Foss" in the middle, not the front.
+    final functions = api
+        .whereType<TopLevelFunctionElement>()
+        .where((f) => f.isPublic && (f.name ?? '').contains('Foss'))
+        .toList();
 
     // Components carry a {@category}; token and theme types do not, so they fall
     // out here for the separate tokens pass.
@@ -89,6 +99,7 @@ class ApiSurface {
     return ApiSurface._(
       classes: classes,
       enums: enums,
+      functions: functions,
       primaries: primaries,
       companions: companions,
       orphanItems: orphanItems,

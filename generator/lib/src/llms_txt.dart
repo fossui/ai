@@ -9,6 +9,7 @@ String renderLlmsTxt(Map<String, Object?> registry) {
       .cast<Map<String, Object?>>();
   final tokens = registry['tokens']! as Map<String, Object?>;
   final radii = (tokens['radii']! as Map).cast<String, Object?>();
+  final types = (tokens['types']! as Map).cast<String, Object?>();
 
   final b = StringBuffer()
     ..writeln('# fossui')
@@ -58,6 +59,11 @@ String renderLlmsTxt(Map<String, Object?> registry) {
     ..writeln('- shadows: ${(tokens['shadows']! as Map).keys.join(', ')}.')
     ..writeln('- motion: named durations in `context.fossTheme.motion`.')
     ..writeln()
+    ..writeln(
+      'Each family resolves to a Dart type at the access site: '
+      '${types.entries.map((e) => '${e.key} `${e.value}`').join(', ')}.',
+    )
+    ..writeln()
     ..writeln('## Components')
     ..writeln()
     ..writeln(
@@ -75,6 +81,9 @@ String renderLlmsTxt(Map<String, Object?> registry) {
       ..writeln();
     for (final c in inCategory) {
       b.writeln('- ${_componentLine(c)}');
+      for (final sub in _support(c)) {
+        b.writeln('  - $sub');
+      }
     }
   }
 
@@ -98,6 +107,34 @@ String _componentLine(Map<String, Object?> c) {
   ].join('. ');
   return inline.isEmpty ? '$name: $summary' : '$name: $summary ($inline)';
 }
+
+// The launcher functions and companion classes a component needs, each with its
+// param names, so a reader of the flat file is not left to guess the group,
+// item, or show-function API the tool records carry.
+List<String> _support(Map<String, Object?> c) {
+  final out = <String>[];
+  for (final fn in (c['functions'] as List?)?.cast<Map<String, Object?>>() ??
+      const []) {
+    out.add('${fn['name']}(${_paramNames(fn['params'])})');
+  }
+  for (final comp in (c['companions'] as List?)?.cast<Map<String, Object?>>() ??
+      const []) {
+    final ctors = (comp['constructors'] as List?)?.cast<Map<String, Object?>>();
+    if (ctors == null || ctors.isEmpty) continue;
+    // Skip a private scope; it is an implementation detail, not a call site.
+    if (comp['kind'] == 'scope') continue;
+    out.add(
+      '${comp['kind']} ${comp['name']}(${_paramNames(ctors.first['params'])})',
+    );
+  }
+  return out;
+}
+
+String _paramNames(Object? params) =>
+    ((params as List?) ?? const [])
+        .cast<Map<String, Object?>>()
+        .map((p) => p['name'])
+        .join(', ');
 
 // FossButtonVariant -> Variant, FossButtonSize -> Size.
 String _enumLabel(String enumName, String component) =>

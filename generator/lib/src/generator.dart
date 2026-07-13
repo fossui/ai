@@ -24,6 +24,13 @@ Future<Map<String, Object?>> buildRegistry({
         ...loadSidecar(metaDir, primary.name!),
       },
   ];
+  // Public launchers that bind to no single component (showFossModal) still ship,
+  // as a top-level bucket, so nothing public is dropped.
+  final orphanFunctions = [
+    for (final fn in api.functions)
+      if (functionOwner(fn.name!, api.primaryNames) == null) functionRecord(fn),
+  ];
+
   return {
     'meta': {
       'package': 'fossui',
@@ -32,6 +39,7 @@ Future<Map<String, Object?>> buildRegistry({
       'homepage': 'https://fossui.org',
     },
     'components': components,
+    if (orphanFunctions.isNotEmpty) 'functions': orphanFunctions,
     'tokens': extractTokens(api.classes),
     'setup': _setup(version),
   };

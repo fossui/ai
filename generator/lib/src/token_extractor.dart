@@ -8,6 +8,16 @@ Map<String, Object?> extractTokens(List<ClassElement> classes) {
   ClassElement byName(String n) => classes.firstWhere((c) => c.name == n);
   return {
     'access': 'context.fossTheme',
+    // The Dart type each family resolves to at the access site. The value maps
+    // below are the const-evaluated data; these are what the reader gets back.
+    'types': {
+      'colors': 'Color',
+      'radii': 'double',
+      'spacing': 'double',
+      'typography': 'TextStyle',
+      'shadows': 'List<BoxShadow>',
+      'motion': 'Duration',
+    },
     'colors': {
       'light': _instance(byName('FossColors'), 'light'),
       'dark': _instance(byName('FossColors'), 'dark'),

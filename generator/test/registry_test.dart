@@ -82,6 +82,29 @@ void main() {
       }
     });
 
+    test('companions carry the constructors an agent must call', () {
+      final radio = components().firstWhere((c) => c['name'] == 'FossRadio');
+      final companions =
+          (radio['companions']! as List).cast<Map<String, Object?>>();
+      final group = companions.firstWhere((c) => c['name'] == 'FossRadioGroup');
+      final params = ((group['constructors']! as List).first
+              as Map<String, Object?>)['params']!
+          as List;
+      final names = [for (final p in params) (p as Map)['name']];
+      expect(names, containsAll(<String>['groupValue', 'children']));
+    });
+
+    test('overlays carry their launcher function with full params', () {
+      final dialog = components().firstWhere((c) => c['name'] == 'FossDialog');
+      final fns = (dialog['functions']! as List).cast<Map<String, Object?>>();
+      final show = fns.firstWhere((f) => f['name'] == 'showFossDialog');
+      expect(show['returns'], startsWith('Future'));
+      final names = [
+        for (final p in show['params']! as List) (p as Map)['name'],
+      ];
+      expect(names, containsAll(<String>['context', 'builder']));
+    });
+
     test('has non-empty enum values and https urls', () {
       for (final c in components()) {
         for (final values in (c['enums'] as Map?)?.values ?? const []) {
@@ -117,6 +140,17 @@ void main() {
           reason: 'bad hex for ${entry.key}: ${entry.value}',
         );
       }
+    });
+
+    test('each family reports the Dart type it resolves to', () {
+      expect(tokens()['types'], {
+        'colors': 'Color',
+        'radii': 'double',
+        'spacing': 'double',
+        'typography': 'TextStyle',
+        'shadows': 'List<BoxShadow>',
+        'motion': 'Duration',
+      });
     });
 
     test('radii are the expected scale', () {
@@ -162,5 +196,13 @@ void main() {
     for (final c in components()) {
       expect(llms, contains(c['name']! as String));
     }
+  });
+
+  test('llms.txt carries the data the tools carry', () {
+    // Token types, a group companion with its real param, and an overlay launcher
+    // so a client that reads the flat file is not behind the tool records.
+    expect(llms, contains('typography `TextStyle`'));
+    expect(llms, contains('FossRadioGroup(children, groupValue'));
+    expect(llms, contains('showFossDialog(context, builder'));
   });
 }

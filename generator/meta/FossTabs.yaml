@@ -3,7 +3,9 @@ whenToUse: >-
   A row or column of tabs that toggle between sibling panels, with an animated
   indicator on the active tab. Use variant for the look (segmented pill or
   underline) and orientation for the axis. Each tab is a FossTab data object,
-  not a widget.
+  not a widget. The strip does not scroll or shrink to fit: a horizontal strip
+  lays every label in one row, so on a phone keep labels short and the count
+  low, or switch to the vertical orientation, to avoid an overflow.
 conventions:
   do:
     - Build the strip from a List of FossTab, each carrying a value, a label String, and an optional content panel.
@@ -17,6 +19,7 @@ conventions:
     - Do not pass a String for variant or orientation; they are FossTabsVariant and FossTabsOrientation.
     - Do not set both value and expect internal state; passing value makes it controlled, so you must drive onChanged.
     - Do not pass color, indicatorColor, or radius to the constructor; overrides live on FossTabsStyle passed to style.
+    - Do not crowd a horizontal strip with long or many labels; it does not scroll and overflows on a narrow screen. Shorten labels, cut the count, or go vertical.
 commonMistakes:
   - wrong: "FossTabs(tabs: [Tab(text: 'Home'), Tab(text: 'Settings')])"
     right: "FossTabs<String>(tabs: const [FossTab(value: 'home', label: 'Home'), FossTab(value: 'settings', label: 'Settings')])"
