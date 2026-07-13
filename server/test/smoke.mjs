@@ -36,6 +36,33 @@ for (const field of ["constructors", "enums", "companions", "examples", "urls", 
 }
 console.log("get_component(fossbutton): full record, all", 9, "field groups present");
 
+// --- companions carry the constructors an agent must call, not just prose ---
+const radio = await call("get_component", { name: "FossRadio" });
+const group = radio.companions.find((c) => c.name === "FossRadioGroup");
+assert.ok(group?.constructors?.[0], "FossRadioGroup should carry a constructor");
+const groupParams = group.constructors[0].params.map((p) => p.name);
+assert.ok(groupParams.includes("groupValue") && groupParams.includes("children"),
+  "FossRadioGroup constructor should expose groupValue and children");
+console.log("get_component(FossRadio): FossRadioGroup params =", groupParams.join(", "));
+
+// --- get_component resolves a companion by name to its owner + full record ---
+const rg = await call("get_component", { name: "FossRadioGroup" });
+assert.equal(rg.component, "FossRadio", "companion should name its owner");
+assert.ok(rg.constructors?.[0]?.params.some((p) => p.name === "groupValue"),
+  "companion lookup should carry its constructor params");
+const bv = await call("get_component", { name: "FossButtonVariant" });
+assert.equal(bv.component, "FossButton", "enum should route to its owner");
+assert.ok(Array.isArray(bv.values), "enum lookup should carry its values");
+console.log("get_component(FossRadioGroup/FossButtonVariant): routed to owner with full record");
+
+// --- overlay launcher functions are documented on their component and routable ---
+const dialog = await call("get_component", { name: "FossDialog" });
+const launcher = (dialog.functions ?? []).find((f) => f.name === "showFossDialog");
+assert.ok(launcher?.params.some((p) => p.name === "context"), "FossDialog should carry showFossDialog");
+const byFn = await call("get_component", { name: "showFossDialog" });
+assert.equal(byFn.component, "FossDialog", "a launcher name should route to its component");
+console.log("get_component(showFossDialog): routed to FossDialog with params");
+
 // --- get_component: miss fuzzy-matches, does not dump the catalog ---
 const missRes = await client.callTool({ name: "get_component", arguments: { name: "Slidr" } });
 assert.equal(missRes.isError, true, "miss should set isError");
@@ -75,7 +102,19 @@ console.log("get_theme_tokens(): all 6 families");
 const radii = await call("get_theme_tokens", { family: "radii" });
 assert.equal(radii.radii.md, 8);
 assert.equal(radii.access, "context.fossTheme");
-console.log("get_theme_tokens(radii): md=8, access present");
+assert.equal(radii.type, "double", "radii family should report its Dart type");
+console.log("get_theme_tokens(radii): md=8, type=double, access present");
+
+const typo = await call("get_theme_tokens", { family: "typography" });
+assert.equal(typo.type, "TextStyle", "typography should resolve to TextStyle");
+console.log("get_theme_tokens(typography): type =", typo.type);
+
+// --- token search matches on synonyms, not just the family key ---
+const radiusHit = await call("search", { query: "radius" });
+assert.ok(radiusHit.tokenFamilies.includes("radii"), "'radius' should find radii");
+const fontHit = await call("search", { query: "font" });
+assert.ok(fontHit.tokenFamilies.includes("typography"), "'font' should find typography");
+console.log("search(radius/font): tokenFamilies resolve via synonyms");
 
 // --- get_setup: every app_type branch ---
 const material = await call("get_setup", { app_type: "material" });

@@ -37,12 +37,43 @@ for (const c of manifest.components) {
   }
 }
 
+// Synonyms so a token search matches on intent, not just the family key:
+// "radius" or "corner" finds radii, "font" or "text" finds typography.
+const tokenAliases: Record<string, string[]> = {
+  colors: ["color"],
+  radii: ["radius", "corner", "rounded"],
+  spacing: ["space", "gap", "padding", "margin"],
+  typography: ["type", "font", "text"],
+  shadows: ["shadow", "elevation"],
+  motion: ["motion", "animation", "duration"],
+};
+
 const json = (data: unknown) => ({
   content: [{ type: "text" as const, text: JSON.stringify(data, null, 2) }],
 });
 
 const find = (name: string) =>
   manifest.components.find((c) => c.name.toLowerCase() === name.toLowerCase());
+
+// A companion or enum lives on its owning component's record, not as a top-level
+// entry, so an agent that asks for one by name (get_component("FossRadioGroup"))
+// is routed to the owner instead of hitting a dead end.
+const owned = new Map<string, { component: string; kind: string; record: unknown }>();
+for (const c of manifest.components) {
+  for (const comp of (c.companions ?? []) as Array<{ name: string; kind?: string }>) {
+    owned.set(comp.name.toLowerCase(), { component: c.name, kind: comp.kind ?? "companion", record: comp });
+  }
+  for (const enumName of Object.keys((c.enums ?? {}) as Record<string, unknown>)) {
+    owned.set(enumName.toLowerCase(), {
+      component: c.name,
+      kind: "enum",
+      record: { name: enumName, values: (c.enums as Record<string, unknown>)[enumName] },
+    });
+  }
+  for (const fn of (c.functions ?? []) as Array<{ name: string }>) {
+    owned.set(fn.name.toLowerCase(), { component: c.name, kind: "function", record: fn });
+  }
+}
 
 // Ordered-subsequence match: "slidr" matches "slider". Cheap fuzzy fallback for
 // a name miss so we suggest the near thing instead of dumping the whole catalog.
@@ -83,7 +114,7 @@ export class FossuiMcp extends McpAgent {
       "get_component",
       {
         description:
-          "Full API for one component: constructors, params, enums, companions, examples, urls, and the curated whenToUse, conventions, and commonMistakes.",
+          "Full API for one component: constructors, params, enums, companions, launcher functions (showFoss...), examples, urls, and the curated whenToUse, conventions, and commonMistakes.",
         inputSchema: {
           name: z.string().min(1).describe("Component name, e.g. FossButton"),
         },
@@ -91,6 +122,16 @@ export class FossuiMcp extends McpAgent {
       async ({ name }) => {
         const found = find(name);
         if (found) return json(found);
+        // A companion or enum: return its record and point at the owning component.
+        const own = owned.get(name.toLowerCase());
+        if (own)
+          return json({
+            name,
+            kind: own.kind,
+            component: own.component,
+            note: `${name} belongs to ${own.component}. Call get_component("${own.component}") for the full picture.`,
+            ...(own.record as Record<string, unknown>),
+          });
         const q = name.toLowerCase();
         const contains = manifest.components.filter((c) => c.name.toLowerCase().includes(q));
         const near = (
@@ -130,9 +171,9 @@ export class FossuiMcp extends McpAgent {
           })
           .filter((x) => x.score > 0)
           .sort((a, b) => b.score - a.score);
-        const tokenFamilies = Object.keys(manifest.tokens).filter(
-          (f) => f !== "access" && f.includes(q),
-        );
+        const tokenFamilies = Object.keys(manifest.tokens)
+          .filter((f) => f !== "access" && f !== "types")
+          .filter((f) => f.includes(q) || (tokenAliases[f] ?? []).some((a) => a.includes(q) || q.includes(a)));
         return json({ components, tokenFamilies });
       },
     );
@@ -150,7 +191,12 @@ export class FossuiMcp extends McpAgent {
       },
       async ({ family }) => {
         if (!family) return json(manifest.tokens);
-        return json({ access: manifest.tokens.access, [family]: manifest.tokens[family] });
+        const types = manifest.tokens.types as Record<string, string> | undefined;
+        return json({
+          access: manifest.tokens.access,
+          type: types?.[family],
+          [family]: manifest.tokens[family],
+        });
       },
     );
 
