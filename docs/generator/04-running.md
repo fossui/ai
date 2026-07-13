@@ -4,7 +4,7 @@
 
 ```
 cd generator
-dart run bin/generate.dart      # writes build/registry.json and build/llms.txt
+dart run bin/generate.dart      # writes build/registry.json, build/llms.txt, and the skill and rules references
 dart test                       # regenerates, then asserts the invariants
 ```
 

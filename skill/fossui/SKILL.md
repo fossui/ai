@@ -9,20 +9,19 @@ description: Use when building or editing Flutter UI with the fossui package (an
 the theme system and every `Foss`-prefixed component. This skill keeps AI-written
 fossui code compiling and idiomatic.
 
-## First, reach for the manifest
+## Find the exact API
 
-If the fossui MCP server is connected, use its tools before writing code. They
-carry the exact, version-accurate API, so you never guess:
+The full component reference is bundled beside this file at `reference.md`: every
+component with its enums, companion params, launcher functions, and the token
+families. Read it before writing code so you never guess a constructor. The
+idioms below are the rules that hold across all of them.
 
-1. `get_setup` for the once-per-project wiring (dependency and theme).
-2. `list_components`, then `get_component(<name>)` for a component's real
-   constructors, params, enums, companions, and launcher functions. It also
-   resolves a companion or enum name (`FossRadioGroup`, `FossButtonVariant`) back
-   to its owning component.
-3. `get_theme_tokens` for token values and the Dart type each family resolves to.
-4. `search` to find a component or token family by keyword.
-
-If the server is not connected, the rules below are the same guidance, distilled.
+If the fossui MCP server is also connected, prefer its tools for the freshest,
+per-component detail: `get_setup` for wiring, `get_component(<name>)` for one
+component's full API (it also resolves a companion or enum name like
+`FossRadioGroup` back to its owner), `get_theme_tokens` for token types, and
+`search` to find a component or token family. Server or bundled reference, the
+content is the same; the server is just live and on demand.
 
 ## The idioms
 

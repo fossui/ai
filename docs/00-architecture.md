@@ -11,11 +11,11 @@ delivery vehicles can disagree.
 ## The parts
 
 ```
-generator/   Dart tool. Reads the package, writes registry.json + llms.txt.
+generator/   Dart tool. Reads the package, writes registry.json + llms.txt + the references.
 server/      MCP server (Cloudflare Worker). Serves registry.json over the protocol.
-skill/       Claude Code skill. The idioms, hand-authored.
-rules/       CLAUDE.md / AGENTS.md paste-in snippet. The idioms, hand-authored.
-docs/        This guide (architecture) + generator internals.
+skill/       Claude Code skill. Hand-authored idioms + a generated reference.md.
+rules/       CLAUDE.md / AGENTS.md paste-in snippet + a generated reference.md.
+docs/        This guide (architecture) + generator and server internals.
 ```
 
 The eval harness (measures whether the manifest helps) lives outside this repo,
@@ -50,7 +50,8 @@ at `foss_ui_docs/ai-eval/`.
                        │   server/    │  serves both over MCP
                        └──────────────┘
 
-  skill/ and rules/ carry the same idioms, hand-authored, kept in sync by review.
+  skill/ and rules/ pair hand-authored idioms with a generated reference.md
+  (the same llms.txt render), so each is self-contained and cannot drift.
 ```
 
 Generated fields (constructors, params, enums, companions, functions, tokens)
@@ -120,8 +121,8 @@ npx tsc --noEmit               # typecheck
 
 ```
 server/   live, exact, on-demand per-component API   -> best with an agent
-skill/    Claude Code idioms + routes to the server  -> Claude Code projects
-rules/    static paste-in baseline                   -> any agent, no server
+skill/    idioms + bundled reference, self-contained -> Claude Code, no server needed
+rules/    paste-in idioms + bundled reference        -> any agent, no server needed
 llms.txt  flat whole-library overview                -> read-the-whole-thing clients
 ```
 

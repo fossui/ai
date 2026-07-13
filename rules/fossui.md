@@ -35,10 +35,14 @@ your project's `CLAUDE.md` or `AGENTS.md`.
 - Horizontal `FossTabs` do not scroll. On a phone, keep labels short and few, or
   use the vertical orientation.
 
-## When the fossui MCP is connected
+## The full component reference
 
-Prefer its tools over guessing: `get_setup` for wiring, `list_components` then
-`get_component(<name>)` for the exact constructor, enums, companions, and
-launcher functions, `get_theme_tokens` for token values and their Dart types, and
-`search` to find a component or token family. `get_component` also resolves a
-companion or enum name (`FossRadioGroup`, `FossButtonVariant`) to its owner.
+Every component, with its enums, companion params, launcher functions, and the
+token families, is in `reference.md` beside this file. Consult it for the exact
+constructor of any component; the rules above are what holds across all of them.
+
+If the fossui MCP server is connected, it serves the same content on demand:
+`get_setup` for wiring, `get_component(<name>)` for one component's full API (it
+also resolves a companion or enum name like `FossRadioGroup` to its owner),
+`get_theme_tokens` for token types, and `search` to find a component or token
+family.

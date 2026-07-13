@@ -198,6 +198,14 @@ void main() {
     }
   });
 
+  test('the skill and rules ship a generated reference', () {
+    for (final path in ['../skill/fossui/reference.md', '../rules/reference.md']) {
+      final ref = File(path).readAsStringSync();
+      expect(ref, equals(llms), reason: '$path should match llms.txt');
+      expect(ref, contains('FossButton'));
+    }
+  });
+
   test('llms.txt carries the data the tools carry', () {
     // Token types, a group companion with its real param, and an overlay launcher
     // so a client that reads the flat file is not behind the tool records.

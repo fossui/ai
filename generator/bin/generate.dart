@@ -25,7 +25,13 @@ Future<void> main(List<String> args) async {
   Directory('build').createSync(recursive: true);
   final json = const JsonEncoder.withIndent('  ').convert(registry);
   File('build/registry.json').writeAsStringSync('$json\n');
-  File('build/llms.txt').writeAsStringSync(renderLlmsTxt(registry));
+
+  // The flat overview, and the standalone reference bundled with the skill and
+  // the rules so both work with no MCP server. One rendering, so they agree.
+  final llms = renderLlmsTxt(registry);
+  File('build/llms.txt').writeAsStringSync(llms);
+  _writeReference('../skill/fossui/reference.md', llms);
+  _writeReference('../rules/reference.md', llms);
 
   final components = (registry['components']! as List)
       .cast<Map<String, Object?>>();
@@ -39,4 +45,12 @@ Future<void> main(List<String> args) async {
       '${(c['constructors'] as List).length} ctor  $enums enum  $comp companion',
     );
   }
+}
+
+// Writes a generated reference beside a delivery vehicle, creating its folder if
+// the vehicle has not been scaffolded yet.
+void _writeReference(String path, String contents) {
+  final file = File(path)..parent.createSync(recursive: true);
+  file.writeAsStringSync(contents);
+  stdout.writeln('reference -> $path');
 }

@@ -16,17 +16,21 @@ one becomes the other.
    code. A missing sidecar yields a valid, judgment-light record. The schema is
    documented in `generator/meta/README.md`.
 
-The generator reads the package as input and writes only into `generator/build/`. It never
-edits the package.
+The generator reads the package as input and writes into `generator/build/` and
+the two bundled references. It never edits the package.
 
 ## Outputs
 
-Two files, both under `generator/build/`:
+Two files under `generator/build/`:
 
 - **`registry.json`**: the structured manifest. Top level is `meta`, a
   `components` array, and a `tokens` object.
 - **`llms.txt`**: a flat text overview rendered from the same records, so the two
   can never disagree.
+
+The same `llms.txt` rendering is also written to `skill/fossui/reference.md` and
+`rules/reference.md`, so the skill and the rules ship a full, self-contained
+component reference that works with no MCP server and cannot drift.
 
 ### A component record
 
