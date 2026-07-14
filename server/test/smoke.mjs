@@ -18,7 +18,7 @@ const call = async (name, args = {}) => {
 // --- tools present ---
 const { tools } = await client.listTools();
 console.log("tools:", tools.map((t) => t.name).join(", "));
-assert.equal(tools.length, 5, "expected 5 tools");
+assert.equal(tools.length, 6, "expected 6 tools");
 
 // --- list_components: shape ---
 const list = await call("list_components");
@@ -115,6 +115,15 @@ assert.ok(radiusHit.tokenFamilies.includes("radii"), "'radius' should find radii
 const fontHit = await call("search", { query: "font" });
 assert.ok(fontHit.tokenFamilies.includes("typography"), "'font' should find typography");
 console.log("search(radius/font): tokenFamilies resolve via synonyms");
+
+// --- get_package: identity an agent needs to pull the package ---
+const pkg = await call("get_package");
+assert.equal(pkg.name, "fossui");
+assert.equal(pkg.install, "flutter pub add fossui");
+assert.equal(pkg.pubDev, "https://pub.dev/packages/fossui");
+assert.ok(pkg.version && pkg.pubspec.includes(pkg.version), "pubspec should carry the version");
+assert.ok(pkg.import.startsWith("package:fossui/"), "import should be the package uri");
+console.log("get_package:", pkg.name, pkg.version, "install =", pkg.install);
 
 // --- get_setup: every app_type branch ---
 const material = await call("get_setup", { app_type: "material" });

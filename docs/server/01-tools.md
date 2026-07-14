@@ -1,6 +1,6 @@
 # Tools and resource
 
-Five tools, each a slice of `registry.json`. All read-only. Empty inputs are
+Six tools, each a slice of `registry.json`. All read-only. Empty inputs are
 rejected by the schema, not treated as match-all.
 
 ## list_components
@@ -46,6 +46,13 @@ Input `{ family? }`. Omit `family` for all six families. Pass one
 (`colors | radii | spacing | typography | shadows | motion`) for that family plus
 its Dart `type` (`typography` is a `TextStyle`, `colors` a `Color`, and so on) and
 the `access` string.
+
+## get_package
+
+No input. Returns the identity for pulling the package: `name`, `version`,
+`pubDev`, `homepage`, the `install` command (`flutter pub add fossui`), the
+`pubspec` line, and the `import`. The entry point for pulling the package; then
+`get_setup` for the wiring.
 
 ## get_setup
 

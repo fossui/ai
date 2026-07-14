@@ -1,5 +1,5 @@
 // The fossui MCP server: serves the generated manifest over Streamable HTTP.
-// Five read-only tools, each a slice of registry.json. The server holds no state;
+// Six read-only tools, each a slice of registry.json. The server holds no state;
 // McpAgent handles the Workers fetch and transport.
 
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
@@ -23,7 +23,7 @@ interface Env {
 }
 
 const manifest = registry as {
-  meta: { version: string };
+  meta: { package: string; version: string; import: string; homepage: string };
   components: Component[];
   tokens: Record<string, unknown>;
   setup: Record<string, string>;
@@ -196,6 +196,27 @@ export class FossuiMcp extends McpAgent {
           access: manifest.tokens.access,
           type: types?.[family],
           [family]: manifest.tokens[family],
+        });
+      },
+    );
+
+    this.server.registerTool(
+      "get_package",
+      {
+        description:
+          "Package identity for pulling fossui into a project: name, version, pub.dev url, homepage, the install command, the pubspec dependency line, and the import. Call this to add the package; then get_setup for the theme wiring.",
+      },
+      async () => {
+        const { package: name, version, import: importPath, homepage } = manifest.meta;
+        return json({
+          name,
+          version,
+          pubDev: `https://pub.dev/packages/${name}`,
+          homepage,
+          install: `flutter pub add ${name}`,
+          pubspec: manifest.setup.pubspec,
+          import: importPath,
+          next: "Call get_setup for the theme wiring.",
         });
       },
     );

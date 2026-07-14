@@ -17,7 +17,7 @@ claude mcp add --transport http fossui https://mcp.fossui.org/mcp
 Anything else that speaks Streamable HTTP: add a server with URL
 `https://mcp.fossui.org/mcp`.
 
-Once connected, the assistant has five tools:
+Once connected, the assistant has six tools:
 
 - `list_components` lists every component with its category, summary, and tags.
   Call this first.
@@ -29,6 +29,9 @@ Once connected, the assistant has five tools:
   summaries, tags, and `whenToUse`.
 - `get_theme_tokens` returns the token families (colors, radii, spacing,
   typography, shadows, motion). Omit the family for all of them.
+- `get_package` returns the identity for pulling the package: name, version,
+  pub.dev url, homepage, the `flutter pub add` command, the pubspec line, and the
+  import.
 - `get_setup` returns the once-per-project wiring for a `material`, `cupertino`,
   or `widgets` app.
 
@@ -41,7 +44,7 @@ Health check: `curl https://mcp.fossui.org/` returns `fossui mcp server`.
 
 The content is baked into the Worker bundle at deploy time. The generator reads
 the package and writes `generator/build/registry.json`; the Worker imports that
-file and slices it across the five tools. So a content change (a new package
+file and slices it across the six tools. So a content change (a new package
 release) is a regenerate plus redeploy, not a live edit. The served
 `meta.version` is whatever package version the last deploy bundled.
 

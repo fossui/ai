@@ -30,7 +30,7 @@ and redeploy; you do not edit request handlers.
 
 ## Read next
 
-- [tools.md](01-tools.md): the five tools and the resource, with input and output
+- [tools.md](01-tools.md): the six tools and the resource, with input and output
   shapes.
 - [request-flow.md](02-request-flow.md): how a request reaches a tool (transport,
   `McpAgent`, the Durable Object, routing).
