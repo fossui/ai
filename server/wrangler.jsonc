@@ -4,6 +4,8 @@
   "main": "src/index.ts",
   "compatibility_date": "2025-05-01",
   "compatibility_flags": ["nodejs_compat"],
+  "workers_dev": false,
+  "routes": [{ "pattern": "mcp.fossui.org", "custom_domain": true }],
   "rules": [{ "type": "Text", "globs": ["**/*.txt"], "fallthrough": true }],
   "durable_objects": {
     "bindings": [{ "name": "FossuiMcp", "class_name": "FossuiMcp" }]

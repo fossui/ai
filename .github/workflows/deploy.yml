@@ -1,0 +1,65 @@
+name: deploy
+
+# A v* tag on this repo regenerates the manifest from the package and redeploys
+# the MCP Worker, so the live server always matches the tagged manifest.
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout ai
+        uses: actions/checkout@v4
+
+      - name: Checkout package
+        uses: actions/checkout@v4
+        with:
+          repository: fossui/fossui
+          path: foss_ui_package
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.41.9
+          cache: true
+
+      - name: Resolve package deps
+        working-directory: foss_ui_package
+        run: flutter pub get
+
+      - name: Generate manifest
+        working-directory: generator
+        run: |
+          dart pub get
+          dart run bin/generate.dart "$GITHUB_WORKSPACE/foss_ui_package"
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install server deps
+        working-directory: server
+        run: npm ci
+
+      - name: Deploy Worker
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: server
+          command: deploy
+
+      - name: Verify
+        working-directory: server
+        run: |
+          sleep 10
+          node test/smoke.mjs https://mcp.fossui.org/mcp
