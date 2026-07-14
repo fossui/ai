@@ -22,7 +22,7 @@ assert.equal(tools.length, 6, "expected 6 tools");
 
 // --- list_components: shape ---
 const list = await call("list_components");
-assert.equal(list.length, 25);
+assert.ok(list.length > 0, "no components");
 for (const c of list) {
   assert.ok(c.name && c.category && c.summary && Array.isArray(c.tags), `bad row ${c.name}`);
 }

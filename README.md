@@ -10,6 +10,17 @@ guesses the API. It invents props that do not exist, misses the enum-based
 variants, or forgets to register the theme. This repo fixes that by giving agents
 a current, structured, version-accurate description of the library.
 
+## Use it
+
+The server is live at `https://mcp.fossui.org/mcp`. Point any MCP client at it.
+
+```
+claude mcp add --transport http fossui https://mcp.fossui.org/mcp
+```
+
+See [docs/mcp-server.md](docs/mcp-server.md) for the tools it exposes and how a
+tagged release redeploys it.
+
 ## How it works
 
 Everything is generated from one source of truth. A Dart generator reads the
