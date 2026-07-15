@@ -8,7 +8,11 @@ content, live.
 
 ## Install
 
-Copy the skill folder into your skills directory:
+```
+npx skills add fossui/ai
+```
+
+Or copy the skill folder into your skills directory directly:
 
 ```
 # per project

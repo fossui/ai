@@ -1,5 +1,7 @@
 # fossui/ai
 
+[![skills.sh](https://skills.sh/b/fossui/ai)](https://skills.sh/fossui/ai)
+
 The AI delivery layer for [fossui](https://fossui.org): tooling that teaches any
 AI assistant the fossui API, so AI-written fossui code compiles and follows the
 library's idioms on the first try.
@@ -20,6 +22,12 @@ claude mcp add --transport http fossui https://mcp.fossui.org/mcp
 
 See [docs/mcp-server.md](docs/mcp-server.md) for the tools it exposes and how a
 tagged release redeploys it.
+
+Or install the Claude Code skill directly:
+
+```
+npx skills add fossui/ai
+```
 
 ## How it works
 
