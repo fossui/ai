@@ -86,7 +86,14 @@ console.log("search(button): top =", byName.components[0].name);
 const none = await call("search", { query: "zzzznope" });
 assert.deepEqual(none.components, []);
 assert.deepEqual(none.tokenFamilies, []);
+assert.deepEqual(none.related, []);
 console.log("search(zzzznope): empty, no crash");
+
+// a companion name surfaces, routed to its owner, even though it is not top-level
+const rel = await call("search", { query: "radiogroup" });
+const radioRel = rel.related.find((r) => r.name === "FossRadioGroup");
+assert.ok(radioRel && radioRel.component === "FossRadio", "RadioGroup should route to FossRadio");
+console.log("search(radiogroup): related ->", radioRel.name, "owned by", radioRel.component);
 
 const tokenHit = await call("search", { query: "color" });
 assert.ok(tokenHit.tokenFamilies.includes("colors"), "should surface the colors family");
@@ -103,11 +110,35 @@ const radii = await call("get_theme_tokens", { family: "radii" });
 assert.equal(radii.radii.md, 8);
 assert.equal(radii.access, "context.fossTheme");
 assert.equal(radii.type, "double", "radii family should report its Dart type");
-console.log("get_theme_tokens(radii): md=8, type=double, access present");
+assert.equal(radii.unit, "logical pixels", "radii family should report its unit");
+console.log("get_theme_tokens(radii): md=8, type=double, unit=logical pixels");
 
 const typo = await call("get_theme_tokens", { family: "typography" });
 assert.equal(typo.type, "TextStyle", "typography should resolve to TextStyle");
 console.log("get_theme_tokens(typography): type =", typo.type);
+
+// --- single-token lookup: type + unit + value for one token ---
+const one = await call("get_theme_tokens", { family: "radii", token: "md" });
+assert.equal(one.value, 8, "radii.md value is 8");
+assert.equal(one.type, "double");
+assert.equal(one.unit, "logical pixels");
+console.log("get_theme_tokens(radii, md): value=8, type=double, unit present");
+
+const color = await call("get_theme_tokens", { family: "colors", token: "primary" });
+assert.ok(color.value.light && color.value.dark, "a color role resolves to light + dark");
+console.log("get_theme_tokens(colors, primary): light + dark present");
+
+const motionTok = await call("get_theme_tokens", { family: "motion", token: "toast" });
+assert.equal(motionTok.unit, "milliseconds", "motion values are milliseconds");
+console.log("get_theme_tokens(motion, toast):", motionTok.value, motionTok.unit);
+
+// token without family is rejected; an unknown token suggests the real ones
+const noFam = await client.callTool({ name: "get_theme_tokens", arguments: { token: "md" } });
+assert.equal(noFam.isError, true, "token without family should error");
+const badTok = await client.callTool({ name: "get_theme_tokens", arguments: { family: "radii", token: "huge" } });
+assert.equal(badTok.isError, true, "unknown token should error");
+assert.ok(JSON.parse(badTok.content[0].text).didYouMean.includes("md"), "should suggest real tokens");
+console.log("get_theme_tokens: token needs family; unknown token -> didYouMean");
 
 // --- token search matches on synonyms, not just the family key ---
 const radiusHit = await call("search", { query: "radius" });

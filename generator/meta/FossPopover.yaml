@@ -1,0 +1,29 @@
+tags: [popover, overlay, anchored, floating, trigger, dropdown]
+whenToUse: >
+  An interactive floating panel anchored to a trigger: a menu, a picker, a small
+  form, or a date surface. Non-modal by default, so the background stays live;
+  set modal for a scrim and a focus trap. Use FossTooltip for a static hint, and
+  FossDialog or FossDrawer for full modal content.
+conventions:
+  do:
+    - Provide builder for the surface content and child for the trigger; both are required.
+    - Choose placement with side and align (enums); nudge with sideOffset and alignOffset.
+    - Set modal to true when you need a scrim and a focus trap; leave it false for a non-blocking panel.
+    - Drive open state with a FossPopoverController, or open plus onOpenChange for controlled mode.
+    - Retheme globally through FossThemeData; for a one-off surface pass a FossPopoverStyle to style.
+    - Give the surface a semanticsLabel so assistive tech announces it.
+  dont:
+    - Do not pass backgroundColor, borderRadius, or padding on the widget; those live on FossPopoverStyle via style.
+    - Do not pass a String for side or align; they are enums.
+    - Do not use a popover for a static, non-interactive hint; use FossTooltip.
+    - Do not expect a background scrim by default; it is non-modal unless modal is true.
+commonMistakes:
+  - wrong: "FossPopover(borderRadius: 12, builder: _menu, child: _trigger)"
+    right: "FossPopover(style: const FossPopoverStyle(borderRadius: 12), builder: _menu, child: _trigger)"
+    why: Surface overrides live on FossPopoverStyle passed to style, not on the widget.
+  - wrong: "FossPopover(side: 'top', builder: _menu, child: _trigger)"
+    right: "FossPopover(side: FossPopoverSide.top, builder: _menu, child: _trigger)"
+    why: side is an enum (FossPopoverSide), not a string.
+  - wrong: "FossPopover(builder: (_) => const Text('Copy'), child: icon)"
+    right: "FossTooltip(message: 'Copy', child: icon)"
+    why: A popover is an interactive panel; a static hint should be a FossTooltip.

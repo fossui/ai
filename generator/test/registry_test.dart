@@ -35,7 +35,7 @@ void main() {
   });
 
   test('has the expected component set', () {
-    expect(components(), hasLength(25));
+    expect(components(), hasLength(26));
     for (final c in components()) {
       expect(c['name']! as String, startsWith('Foss'));
     }
@@ -151,6 +151,20 @@ void main() {
         'shadows': 'List<BoxShadow>',
         'motion': 'Duration',
       });
+    });
+
+    test('each family reports the unit its values carry', () {
+      final units = (tokens()['units']! as Map).cast<String, Object?>();
+      expect(units.keys.toSet(), {
+        'colors',
+        'radii',
+        'spacing',
+        'typography',
+        'shadows',
+        'motion',
+      });
+      expect(units['motion'], 'milliseconds');
+      expect(units['radii'], 'logical pixels');
     });
 
     test('radii are the expected scale', () {

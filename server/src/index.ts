@@ -1,5 +1,5 @@
 // The fossui MCP server: serves the generated manifest over Streamable HTTP.
-// Six read-only tools, each a slice of registry.json. The server holds no state;
+// Seven read-only tools, each a slice of registry.json. The server holds no state;
 // McpAgent handles the Workers fetch and transport.
 
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
@@ -186,7 +186,7 @@ export class FossuiMcp extends McpAgent {
       "search",
       {
         description:
-          "Keyword search across component names, summaries, tags, and whenToUse, plus token family names. Returns ranked matches.",
+          "Keyword search across component names, summaries, tags, and whenToUse, the companion, enum, and launcher names they own, plus token family names. Returns ranked matches.",
         inputSchema: { query: z.string().min(1) },
       },
       async ({ query }) => {
@@ -202,10 +202,15 @@ export class FossuiMcp extends McpAgent {
           })
           .filter((x) => x.score > 0)
           .sort((a, b) => b.score - a.score);
+        // Companions, enums, and launchers are not top-level, so a query like
+        // "RadioGroup" would miss them. Surface each match routed to its owner.
+        const related = [...owned.values()]
+          .filter((o) => (o.record as { name?: string }).name?.toLowerCase().includes(q))
+          .map((o) => ({ name: (o.record as { name?: string }).name, kind: o.kind, component: o.component }));
         const tokenFamilies = Object.keys(manifest.tokens)
-          .filter((f) => f !== "access" && f !== "types")
+          .filter((f) => f !== "access" && f !== "types" && f !== "units")
           .filter((f) => f.includes(q) || (tokenAliases[f] ?? []).some((a) => a.includes(q) || q.includes(a)));
-        return json({ components, tokenFamilies });
+        return json({ components, related, tokenFamilies });
       },
     );
 
@@ -213,20 +218,53 @@ export class FossuiMcp extends McpAgent {
       "get_theme_tokens",
       {
         description:
-          "The theme token families (colors, radii, spacing, typography, shadows, motion), read via context.fossTheme. Omit family to get all.",
+          "The theme token families (colors, radii, spacing, typography, shadows, motion), read via context.fossTheme, each with its Dart type and unit. Omit family for all; pass token for one value, e.g. family 'radii' token 'md'.",
         inputSchema: {
           family: z
             .enum(["colors", "radii", "spacing", "typography", "shadows", "motion"])
             .optional(),
+          token: z
+            .string()
+            .min(1)
+            .optional()
+            .describe("A single token in the family, e.g. 'md' for radii, 'primary' for colors. Requires family."),
         },
       },
-      async ({ family }) => {
+      async ({ family, token }) => {
+        const types = manifest.tokens.types as Record<string, string>;
+        const units = manifest.tokens.units as Record<string, string>;
+        if (token && !family) {
+          return {
+            ...json({ error: "token requires family. Pass family too, e.g. family 'radii' token 'md'." }),
+            isError: true,
+          };
+        }
         if (!family) return json(manifest.tokens);
-        const types = manifest.tokens.types as Record<string, string> | undefined;
+        const familyData = manifest.tokens[family] as Record<string, unknown>;
+        if (token) {
+          // colors nest under light/dark; a role resolves to both. Other
+          // families are a flat step map.
+          const light = family === "colors" ? (familyData.light as Record<string, unknown>) : familyData;
+          if (!(token in light)) {
+            return {
+              ...json({
+                error: `No token '${token}' in ${family}. Call get_theme_tokens with just family to see them.`,
+                didYouMean: Object.keys(light),
+              }),
+              isError: true,
+            };
+          }
+          const value =
+            family === "colors"
+              ? { light: light[token], dark: (familyData.dark as Record<string, unknown>)[token] }
+              : familyData[token];
+          return json({ access: manifest.tokens.access, family, token, type: types[family], unit: units[family], value });
+        }
         return json({
           access: manifest.tokens.access,
-          type: types?.[family],
-          [family]: manifest.tokens[family],
+          type: types[family],
+          unit: units[family],
+          [family]: familyData,
         });
       },
     );
