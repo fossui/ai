@@ -48,6 +48,37 @@ const tokenAliases: Record<string, string[]> = {
   motion: ["motion", "animation", "duration"],
 };
 
+// How to build a custom widget that matches the library: the access pattern,
+// the customization layers, and a worked example. It teaches composition, not
+// numbers; concrete values stay in get_theme_tokens so nothing drifts here.
+const customComponentGuide = {
+  access:
+    "Read every token through context.fossTheme (a FossThemeData). It resolves the FossTheme InheritedWidget, then a FossThemeData registered in ThemeData.extensions, then the light default, so it works under MaterialApp, CupertinoApp, or a bare WidgetsApp.",
+  layers: [
+    "Global retheme: pass your own FossThemeData, or layer a FossThemeSpec over a base with FossThemeData.light.retheme(spec). This is the preferred path.",
+    "Per-component style object (FossButtonStyle and the like): the one-off override for a single instance.",
+    "No per-instance token props on constructors (no borderRadius:, color:, padding:). To change corners or color, change the theme.",
+  ],
+  example: [
+    "Widget build(BuildContext context) {",
+    "  final t = context.fossTheme;",
+    "  return Container(",
+    "    padding: t.spacing.all(4),",
+    "    decoration: BoxDecoration(",
+    "      color: t.colors.card,",
+    "      borderRadius: BorderRadius.circular(t.radii.lg),",
+    "      border: Border.all(color: t.colors.border),",
+    "      boxShadow: t.shadows.sm,",
+    "    ),",
+    "    child: Text('Custom', style: t.typography.sm.medium),",
+    "  );",
+    "}",
+  ].join("\n"),
+  tokens:
+    "Call get_theme_tokens for the concrete values of any family: colors, radii, spacing, typography, shadows, motion.",
+  note: "Corners render as a superellipse (squircle) across the built-in components; the shape builder is not public, so BorderRadius.circular is close but not identical.",
+};
+
 const json = (data: unknown) => ({
   content: [{ type: "text" as const, text: JSON.stringify(data, null, 2) }],
 });
@@ -236,6 +267,15 @@ export class FossuiMcp extends McpAgent {
         const wiring = !app_type || app_type === "material" ? s.material : s.nonMaterial;
         return json({ pubspec: s.pubspec, wiring, access: s.access, note: s.note });
       },
+    );
+
+    this.server.registerTool(
+      "build_custom_component",
+      {
+        description:
+          "How to build your own widget that matches the fossui look and feel: the context.fossTheme access pattern, the customization layers, and a worked token-only example. Pair with get_theme_tokens for concrete values.",
+      },
+      async () => json(customComponentGuide),
     );
   }
 }

@@ -18,7 +18,7 @@ const call = async (name, args = {}) => {
 // --- tools present ---
 const { tools } = await client.listTools();
 console.log("tools:", tools.map((t) => t.name).join(", "));
-assert.equal(tools.length, 6, "expected 6 tools");
+assert.equal(tools.length, 7, "expected 7 tools");
 
 // --- list_components: shape ---
 const list = await call("list_components");
@@ -135,6 +135,15 @@ assert.ok(widgets.wiring.includes("FossTheme("));
 const dflt = await call("get_setup");
 assert.ok(dflt.wiring.includes("MaterialApp"), "no app_type defaults to material");
 console.log("get_setup: material=MaterialApp, cupertino/widgets=FossTheme, default=material");
+
+// --- build_custom_component: composition guidance + worked example ---
+const guide = await call("build_custom_component");
+assert.ok(guide.access.includes("context.fossTheme"), "guide should name the accessor");
+assert.equal(guide.layers.length, 3, "three customization layers");
+assert.ok(guide.example.includes("context.fossTheme") && guide.example.includes("t.radii.lg"),
+  "example should read tokens, not hardcode values");
+assert.ok(guide.tokens.includes("get_theme_tokens"), "guide should point at get_theme_tokens");
+console.log("build_custom_component: access + 3 layers + token example");
 
 // --- resource ---
 const { resources } = await client.listResources();
