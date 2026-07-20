@@ -1,0 +1,30 @@
+tags: [date, picker, calendar, field, range, input, dialog]
+whenToUse: >
+  A field that shows the chosen date and opens a FossCalendar in a dialog to
+  change it. Use FossDatePicker.single for one day and .range for a start-to-end
+  span. It presents as a bottom sheet by default or a centered card via
+  presentation. When the calendar should stay inline and always visible, use
+  FossCalendar directly.
+conventions:
+  do:
+    - Pick single or range; drive selected plus onSelected, both required.
+    - Format the field text with a format callback; a default is built in, so no date library is needed.
+    - Choose the surface with presentation (FossDialogPresentation.bottomSheet or .card).
+    - Control the open state with open plus onOpenChange, or leave both null for uncontrolled.
+    - Set closeOnSelect to keep the dialog open after a pick; pass minDate, maxDate, isDateEnabled, and firstDayOfWeek straight through to the calendar.
+    - Disable with enabled false; retheme globally through FossThemeData or pass a FossDatePickerStyle to style.
+  dont:
+    - Do not pass a String for presentation; it is the FossDialogPresentation enum.
+    - Do not disable by passing a null callback; onSelected is required. Use enabled false.
+    - Do not pass a date-formatting package; format is a plain callback over DateTime or FossDateRange.
+    - Do not use it for an always-visible grid; that is FossCalendar.
+commonMistakes:
+  - wrong: "FossDatePicker.single(selected: day, onSelected: (d) {}, presentation: 'card')"
+    right: "FossDatePicker.single(selected: day, onSelected: (d) {}, presentation: FossDialogPresentation.card)"
+    why: presentation is an enum (FossDialogPresentation), not a string.
+  - wrong: "FossDatePicker.single(selected: day, onSelected: (d) {}, enabled: () {})"
+    right: "FossDatePicker.single(selected: day, onSelected: (d) {}, enabled: false)"
+    why: enabled is a bool; there is no callback-based disable.
+  - wrong: "FossDatePicker.range(selected: FossDateRange(start: a, end: b), onSelected: (r) {}, format: DateFormat.yMd().format)"
+    right: "FossDatePicker.range(selected: FossDateRange(start: a, end: b), onSelected: (r) {}, format: (r) => '${r.start} to ${r.end}')"
+    why: format is a callback over FossDateRange; no external date library is required.

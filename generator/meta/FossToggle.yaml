@@ -1,0 +1,29 @@
+tags: [toggle, pressed, button, two-state, bold, formatting, on-off]
+whenToUse: >
+  A two-state pressable button that holds an on / off look, for a formatting
+  control (bold, italic) or any standalone press-and-hold state. Renders a
+  label, a leading icon, or a square icon-only control. For a set of related
+  toggles bound to one selection, use FossToggleGroup; for an instant setting
+  switch, use FossSwitch.
+conventions:
+  do:
+    - Drive pressed (required) and flip it in onPressedChanged.
+    - Set emphasis with variant (FossToggleVariant standard or outline) and height with size (FossToggleSize sm, md, lg).
+    - Put a label in child, an icon in leading, or an icon in child alone for a square icon-only toggle.
+    - Give an icon-only toggle a semanticLabel; it has no visible text.
+    - Disable by passing a null onPressedChanged; retheme globally through FossThemeData or pass a FossToggleStyle to style.
+  dont:
+    - Do not pass a String for variant or size; both are enums.
+    - Do not look for an enabled param; a null onPressedChanged is the disable.
+    - Do not pass plain Colors for backgroundColor or foregroundColor in the style; they are WidgetStateProperty of Color.
+    - Do not use a bare toggle for a group of exclusive options; that is FossToggleGroup.
+commonMistakes:
+  - wrong: "FossToggle(pressed: bold, onPressedChanged: (v) {}, variant: 'outline')"
+    right: "FossToggle(pressed: bold, onPressedChanged: (v) {}, variant: FossToggleVariant.outline)"
+    why: variant is an enum (FossToggleVariant), not a string.
+  - wrong: "FossToggle(pressed: bold, onPressedChanged: (v) {}, enabled: false)"
+    right: "FossToggle(pressed: bold, onPressedChanged: null)"
+    why: There is no enabled param; a null onPressedChanged disables the toggle.
+  - wrong: "FossToggle(pressed: on, onPressedChanged: (v) {}, child: const Icon(LucideIcons.bold))"
+    right: "FossToggle(pressed: on, onPressedChanged: (v) {}, semanticLabel: 'Bold', child: const Icon(LucideIcons.bold))"
+    why: An icon-only toggle needs a semanticLabel for assistive tech.

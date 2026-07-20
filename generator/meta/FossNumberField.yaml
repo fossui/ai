@@ -1,0 +1,29 @@
+tags: [number, numeric, input, stepper, quantity, form, spinbox]
+whenToUse: >
+  A numeric input flanked by decrement and increment steppers, clamped to a
+  range with a step. Use it for a quantity, an amount, or any bounded number.
+  For free text use FossTextField; for a value picked along a track use
+  FossSlider.
+conventions:
+  do:
+    - Drive value plus onChanged (controlled), or seed initialValue (uncontrolled).
+    - Bound with min and max; set the tap increment with step and the coarse increment with largeStep.
+    - Size with size (FossTextFieldSize sm, md, lg).
+    - Convert display and entry with format and parse when a plain number is not enough.
+    - Show an invalid state with error true; disable with enabled false.
+    - Retheme globally through FossThemeData; for a one-off pass a FossNumberFieldStyle to style.
+  dont:
+    - Do not pass both value and initialValue; pick controlled or uncontrolled.
+    - Do not pass a String for size; it is the FossTextFieldSize enum.
+    - Do not disable with a null onChanged alone; disable with enabled false.
+    - Do not pass borderRadius or backgroundColor on the widget; those live on FossNumberFieldStyle via style.
+commonMistakes:
+  - wrong: "FossNumberField(value: qty, initialValue: 1, onChanged: (v) {})"
+    right: "FossNumberField(value: qty, onChanged: (v) => setState(() => qty = v))"
+    why: value and initialValue are mutually exclusive; controlled mode uses value plus onChanged.
+  - wrong: "FossNumberField(value: qty, onChanged: (v) {}, size: 'lg')"
+    right: "FossNumberField(value: qty, onChanged: (v) {}, size: FossTextFieldSize.lg)"
+    why: size is the FossTextFieldSize enum, not a string.
+  - wrong: "FossNumberField(value: qty, onChanged: (v) {}, borderRadius: 8)"
+    right: "FossNumberField(value: qty, onChanged: (v) {}, style: const FossNumberFieldStyle(borderRadius: 8))"
+    why: Frame overrides live on FossNumberFieldStyle passed to style, not on the widget.

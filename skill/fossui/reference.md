@@ -36,6 +36,8 @@ All are `Foss`-prefixed. Variants and sizes are enums passed as named params; a 
 - FossButton: A pressable button in the fossui style. (Variant: primary | secondary | outline | ghost | destructive | link. Size: sm | md | lg. Status: idle | loading | disabled)
   - controller FossButtonController(status)
   - style FossButtonStyle(backgroundColor, foregroundColor, side, borderRadius, padding, minHeight, textStyle, shadow, iconSize, gap, disabledOpacity)
+- FossCalendar: A month grid for viewing and picking dates: a seven-column day grid under a month caption with previous and next navigation.
+  - style FossCalendarStyle(dayTextStyle, weekdayTextStyle, captionTextStyle, dayForegroundColor, mutedForegroundColor, selectedColor, selectedForegroundColor, rangeColor, hoverColor, todayIndicatorColor, selectedTodayIndicatorColor, focusRingColor, chevronColor, dayRadius, cellSize)
 - FossCheckbox: A checkbox: an independent on / off toggle that can also show an indeterminate state. (GroupVariant: plain | card)
   - group FossCheckboxGroup(children, values, onChanged, label, errorText, variant, enabled)
   - item FossCheckboxItem(value, label, description, enabled, style)
@@ -43,8 +45,14 @@ All are `Foss`-prefixed. Variants and sizes are enums passed as named params; a 
 - FossCombobox: A text field with a filtered dropdown of predefined items, each carrying a check when picked.
   - item FossComboboxItem(value, label, icon, enabled)
   - style FossComboboxStyle(backgroundColor, borderColor, borderRadius, textStyle, shadow)
+- FossDatePicker: A date field that opens a calendar in a modal dialog and shows the chosen date back in its trigger.
+  - style FossDatePickerStyle(placeholderColor, gap)
 - FossMultiCombobox: A combobox that holds several picks at once, shown as removable chips.
 - FossMultiSelect: A pick-several-from-list control with no typing.
+- FossNumberField: A numeric input flanked by a decrement and an increment button.
+  - style FossNumberFieldStyle(backgroundColor, borderColor, borderRadius, minHeight, textStyle, iconSize, stepperHoverColor, shadow)
+- FossOtpField: A segmented one-time-code field: a row of single-character slots over one hidden input. (Size: md | lg)
+  - style FossOtpFieldStyle(backgroundColor, borderColor, borderRadius, slotSize, textStyle, gap, shadow, separatorColor, separatorSize)
 - FossRadio: A single option within a [FossRadioGroup]. (GroupVariant: plain | card)
   - group FossRadioGroup(children, groupValue, onChanged, label, errorText, variant, enabled)
   - style FossRadioStyle(backgroundColor, checkedColor, dotColor, borderColor, shadow, circleSize, dotSize, gap, labelStyle, descriptionStyle)
@@ -57,6 +65,11 @@ All are `Foss`-prefixed. Variants and sizes are enums passed as named params; a 
   - style FossSwitchStyle(activeTrackColor, inactiveTrackColor, thumbColor, shadow, trackWidth, trackHeight, thumbSize)
 - FossTextField: A text field in the fossui style. (Size: sm | md | lg)
   - style FossTextFieldStyle(backgroundColor, borderColor, borderRadius, contentPadding, minHeight, textStyle, labelStyle, helperStyle, iconSize, gap, shadow)
+- FossToggle: A button that holds a two-state pressed look: tap it to turn it on, tap again to release. It is the control behind a formatting button (bold, italic) in a toolbar, sized and shaped like a FossButton but carrying a binary on / off state. (Variant: standard | outline. Size: sm | md | lg)
+  - style FossToggleStyle(backgroundColor, foregroundColor, side, borderRadius, cornerRadius, padding, minHeight, textStyle, shadow, iconSize, gap, disabledOpacity)
+  - item FossToggleGroupItem(value, leading, child, semanticLabel, enabled)
+  - group FossToggleGroup(children, value, onChanged, variant, size, orientation, enabled, style)
+  - style FossToggleGroupStyle(gap, connectedBorderColor)
 
 ### Feedback
 
@@ -64,8 +77,11 @@ All are `Foss`-prefixed. Variants and sizes are enums passed as named params; a 
   - style FossAlertStyle(backgroundColor, borderColor, iconColor, borderRadius, titleStyle, descriptionStyle)
 - FossBadge: A compact status pill: a content-hugging, single-line label that tags a count, a state, or a category. Static and non-interactive. (Variant: primary | secondary | outline | destructive | info | success | warning | error. Size: sm | md | lg)
   - style FossBadgeStyle(backgroundColor, borderColor, foregroundColor, borderRadius, labelStyle)
+- FossMeter: A static gauge: a full-width track with a leading fill that shows one measurement inside a fixed range (disk used, a quota, a rating). It is the display-only sibling of the progress bar: bounded and non-interactive.
+  - style FossMeterStyle(trackColor, fillColor, labelStyle, valueStyle)
 - FossProgress: A determinate progress bar: a full-width track with a leading fill that grows from the start to show how far a long task has run. It is static and non-interactive.
   - style FossProgressStyle(trackColor, fillColor, labelStyle, valueLabelStyle)
+- FossSkeleton: A placeholder that stands in for content while it loads.
 - FossSpinner: A circular loading indicator: an open arc that spins continuously.
 
 ### Overlays
@@ -93,6 +109,9 @@ All are `Foss`-prefixed. Variants and sizes are enums passed as named params; a 
 
 ### Layout
 
+- FossAccordion: A stack of collapsible sections: each header toggles a panel of content open or closed, with a rotating chevron and an animated height.
+  - item FossAccordionItem(value, title, child, enabled)
+  - style FossAccordionStyle(titleTextStyle, panelTextStyle, chevronColor, dividerColor, headerPadding, panelPadding)
 - FossAvatar: A user's stand-in: a fixed-size circle that shows a profile [image] and falls back to a [fallback] glyph (usually initials) while the image loads, when it is absent, or when it fails to load. Static and non-interactive. (Size: xs | sm | md | lg | xl | xl2)
   - style FossAvatarStyle(backgroundColor, fallbackColor, fallbackTextStyle)
 - FossCard: A static content container: a bordered, rounded surface that groups an optional header (title, description, trailing action), an optional content body, and an optional footer. Every slot is optional and content-agnostic; the surface renders, it does not respond.

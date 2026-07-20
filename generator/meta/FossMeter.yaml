@@ -1,0 +1,28 @@
+tags: [meter, gauge, measurement, quota, usage, display, static]
+whenToUse: >
+  A static gauge for one measured value inside a fixed range: disk used, a
+  quota, a score. Display only, with no interaction. For task completion that
+  advances over time, use FossProgress; to let the user pick a value, use
+  FossSlider.
+conventions:
+  do:
+    - Pass value; set the range with min and max (default 0 to 100).
+    - Add a label for what is measured, and format the readout with formatValue.
+    - Hide the numeric readout with showValue false.
+    - Give a semanticsLabel so assistive tech announces the measurement.
+    - Retheme globally through FossThemeData; for a one-off pass a FossMeterStyle to style.
+  dont:
+    - Do not attach an onChanged; the meter is display only.
+    - Do not pass fillColor or trackColor on the widget; those live on FossMeterStyle via style.
+    - Do not use it for indeterminate or advancing progress; that is FossProgress.
+    - Do not pre-clamp value; it is clamped to the min and max range for you.
+commonMistakes:
+  - wrong: "FossMeter(value: 40, onChanged: (v) {})"
+    right: "FossMeter(value: 40, label: 'Storage')"
+    why: The meter is static; there is no onChanged. Use FossSlider to pick a value.
+  - wrong: "FossMeter(value: used, fillColor: Colors.green)"
+    right: "FossMeter(value: used, style: const FossMeterStyle(fillColor: Color(0xFF16A34A)))"
+    why: The fill color lives on FossMeterStyle passed to style, not on the widget.
+  - wrong: "FossMeter(value: 3, max: 5, formatValue: (v) => '$v')"
+    right: "FossMeter(value: 3, max: 5, formatValue: (value, min, max) => '$value of $max')"
+    why: formatValue receives value, min, and max, not value alone.

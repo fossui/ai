@@ -1,0 +1,29 @@
+tags: [accordion, collapse, expand, disclosure, sections, faq, panel]
+whenToUse: >
+  A vertical stack of collapsible sections, each with a header that toggles a
+  panel open or closed: an FAQ, grouped settings, or progressive detail. Leave
+  multiple false so one section opens at a time; set it true to open several at
+  once. For a single show / hide of one region, a plain toggle is enough; for
+  navigation between sibling views, use FossTabs.
+conventions:
+  do:
+    - Pass children as a list of FossAccordionItem, each with a unique value, a title, and a child.
+    - Set multiple to true to allow several open sections; leave it false for one at a time.
+    - Drive open sections with value plus onValueChanged (controlled), or seed with initialValue (uncontrolled).
+    - Disable a section through FossAccordionItem.enabled, not a callback.
+    - Retheme globally through FossThemeData; for a one-off pass a FossAccordionStyle to style.
+  dont:
+    - Do not pass both value and initialValue; pick controlled or uncontrolled.
+    - Do not expect collapsible to matter when multiple is true; it only applies in single mode.
+    - Do not pass titleColor or padding on the widget; those live on FossAccordionStyle via style.
+    - Do not use an accordion to switch between sibling panels; that is FossTabs.
+commonMistakes:
+  - wrong: "FossAccordion(children: [FossAccordionItem(title: Text('One'), child: body)])"
+    right: "FossAccordion(children: [FossAccordionItem(value: 'one', title: const Text('One'), child: body)])"
+    why: Each item needs a unique value; it is the identity used for open state.
+  - wrong: "FossAccordion(value: open, initialValue: {'one'}, children: items)"
+    right: "FossAccordion(value: open, onValueChanged: (v) => setState(() => open = v), children: items)"
+    why: value and initialValue are mutually exclusive; controlled mode uses value plus onValueChanged.
+  - wrong: "FossAccordion(headerPadding: EdgeInsets.all(12), children: items)"
+    right: "FossAccordion(style: const FossAccordionStyle(headerPadding: EdgeInsets.all(12)), children: items)"
+    why: Layout overrides live on FossAccordionStyle passed to style, not on the widget.
