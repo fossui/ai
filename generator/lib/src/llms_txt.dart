@@ -87,6 +87,31 @@ String renderLlmsTxt(Map<String, Object?> registry) {
     }
   }
 
+  final withMistakes = components.where(
+    (c) => (c['commonMistakes'] as List?)?.isNotEmpty ?? false,
+  );
+  if (withMistakes.isNotEmpty) {
+    b
+      ..writeln()
+      ..writeln('## Common mistakes')
+      ..writeln()
+      ..writeln(
+        'The wrong form, then the fix: the errors a model makes writing '
+        'fossui without the API in front of it.',
+      )
+      ..writeln();
+    for (final c in withMistakes) {
+      for (final m
+          in (c['commonMistakes']! as List).cast<Map<String, Object?>>()) {
+        // Some examples span lines (a follow-up comment); flatten so each
+        // mistake stays one list item.
+        final wrong = (m['wrong']! as String).replaceAll('\n', ' ');
+        final right = (m['right']! as String).replaceAll('\n', ' ');
+        b.writeln('- ${c['name']}: `$wrong` -> `$right`');
+      }
+    }
+  }
+
   b
     ..writeln()
     ..writeln('## Links')
