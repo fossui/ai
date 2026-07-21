@@ -2,7 +2,7 @@
 
 The MCP server serves the fossui manifest over the Model Context Protocol so an
 AI assistant can look up the real API instead of guessing it. It runs as a
-Cloudflare Worker at `https://mcp.fossui.org/mcp`.
+Cloudflare Worker at `https://mcp.fossui.org`.
 
 ## Use it
 
@@ -11,13 +11,13 @@ Point any MCP client at the endpoint.
 Claude Code:
 
 ```
-claude mcp add --transport http fossui https://mcp.fossui.org/mcp
+claude mcp add --transport http fossui https://mcp.fossui.org
 ```
 
 Anything else that speaks Streamable HTTP: add a server with URL
-`https://mcp.fossui.org/mcp`.
+`https://mcp.fossui.org`.
 
-Once connected, the assistant has six tools:
+Once connected, the assistant has seven tools:
 
 - `list_components` lists every component with its category, summary, and tags.
   Call this first.
@@ -34,11 +34,18 @@ Once connected, the assistant has six tools:
   import.
 - `get_setup` returns the once-per-project wiring for a `material`, `cupertino`,
   or `widgets` app.
+- `build_custom_component` returns the recipe for building your own widget that
+  matches the library: the `context.fossTheme` access pattern, the customization
+  layers, and a worked token-only example.
 
 There is also a resource, `fossui://llms.txt`, a flat overview for clients that
 prefer reading the whole thing over calling tools.
 
-Health check: `curl https://mcp.fossui.org/` returns `fossui mcp server`.
+Both the bare root `https://mcp.fossui.org` and `https://mcp.fossui.org/mcp`
+accept MCP connections, so either URL works. A plain `GET /` is the exception: it
+returns the health string `fossui mcp server`, so `curl https://mcp.fossui.org/`
+is still the health check. The bare root is the documented endpoint; `/mcp` stays
+as a fallback.
 
 ## What gets served
 

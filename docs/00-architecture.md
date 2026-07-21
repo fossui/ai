@@ -63,7 +63,7 @@ from the `meta/` sidecars, reviewed like code. See `docs/generator/`.
 ```
    AI agent
       │
-      │  one of six tools over GET /mcp (Streamable HTTP)
+      │  one of seven tools over GET /mcp (Streamable HTTP)
       ▼
  ┌─────────────────────────────────────────────┐
  │  server  (Durable Object: FossuiMcp)         │
@@ -74,6 +74,7 @@ from the `meta/` sidecars, reviewed like code. See `docs/generator/`.
  │   get_theme_tokens  token values + Dart types│
  │   get_package       identity + install       │
  │   get_setup         theme wiring             │
+ │   build_custom_component  matching widget    │
  │   resource: fossui://llms.txt                │
  └───────────────────────┬─────────────────────┘
                          │ returns a slice of
