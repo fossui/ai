@@ -324,6 +324,17 @@ export default {
     if (url.pathname === "/mcp") {
       return FossuiMcp.serve("/mcp", { binding: "FossuiMcp" }).fetch(request, env, ctx);
     }
+    // Also accept MCP on the root, so a client that drops the /mcp path still
+    // connects. A real MCP request is any non-GET method (POST messages, DELETE
+    // teardown) or a GET that opens the SSE stream (Accept: text/event-stream);
+    // a plain GET / stays the health string for browsers and the health check.
+    if (url.pathname === "/") {
+      const accept = request.headers.get("accept") ?? "";
+      const wantsMcp = request.method !== "GET" || accept.includes("text/event-stream");
+      if (wantsMcp) {
+        return FossuiMcp.serve("/", { binding: "FossuiMcp" }).fetch(request, env, ctx);
+      }
+    }
     return new Response("fossui mcp server", { status: 200 });
   },
 };
