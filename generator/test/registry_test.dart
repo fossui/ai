@@ -23,7 +23,13 @@ void main() {
   List<Map<String, Object?>> components() =>
       (registry['components']! as List).cast<Map<String, Object?>>();
 
-  const categories = {'Inputs', 'Feedback', 'Overlays', 'Layout'};
+  const categories = {
+    'Inputs',
+    'Feedback',
+    'Overlays',
+    'Layout',
+    'Typography',
+  };
   final emDash = String.fromCharCode(0x2014);
   final hex = RegExp(r'^#[0-9A-F]{8}$');
 
@@ -35,7 +41,7 @@ void main() {
   });
 
   test('has the expected component set', () {
-    expect(components(), hasLength(26));
+    expect(components(), hasLength(35));
     for (final c in components()) {
       expect(c['name']! as String, startsWith('Foss'));
     }

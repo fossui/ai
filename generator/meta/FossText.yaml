@@ -1,0 +1,34 @@
+tags: [typography, text, type, heading, title, body, label, caption, display, font, weight, size, color]
+whenToUse: >-
+  On-brand text in a type step and weight. Reach for it instead of a bare Text
+  so the scale, weights, and bundled font come from the theme. Pick a common role
+  with a named constructor (.body, .title, .heading, .display, .label, .caption),
+  or set size and weight explicitly for full control.
+conventions:
+  do:
+    - Pass the string as the first positional argument.
+    - Pick the step with size (FossTextSize) and the weight with weight (FossTextWeight); both are enums.
+    - Reach for a named constructor for a common role instead of repeating a size plus weight pair.
+    - Pass color as a semantic FossTextColor role; leave it null for the foreground role.
+    - Set header to true on a true document heading so assistive tech can navigate to it.
+    - Merge a one-off TextStyle through style; it wins on the fields it sets.
+    - Retheme the type scale and font globally through FossThemeData.
+  dont:
+    - Do not pass a String for size, weight, or color; they are enums.
+    - Do not pass an arbitrary Color for color; it is a FossTextColor role.
+    - Do not set header on every large label; reserve it for true document headings.
+    - Do not rebuild the type through style; use size, weight, and color, and keep style for minor overrides.
+    - Do not wrap the text in a Container to restyle it; change the theme or pass style.
+commonMistakes:
+  - wrong: "FossText('Hello', size: 'lg', weight: 'bold')"
+    right: "FossText('Hello', size: FossTextSize.lg, weight: FossTextWeight.bold)"
+    why: size and weight are enums, not strings.
+  - wrong: "FossText.title('Title', color: Color(0xFF2563EB))"
+    right: "FossText.title('Title', color: FossTextColor.primary)"
+    why: color is a semantic FossTextColor role, not an arbitrary Color.
+  - wrong: "Text('Hello', style: context.fossTheme.typography.lg)"
+    right: "FossText('Hello', size: FossTextSize.lg)"
+    why: FossText surfaces the type scale directly, so there is no need to read the token by hand.
+  - wrong: "FossText('Settings', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold))"
+    right: "FossText.display('Settings')"
+    why: A named constructor or the size and weight enums carry the scale; style is for minor one-off overrides.
