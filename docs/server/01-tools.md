@@ -1,6 +1,6 @@
 # Tools and resource
 
-Six tools, each a slice of `registry.json`. All read-only. Empty inputs are
+Seven tools, each a slice of `registry.json`. All read-only. Empty inputs are
 rejected by the schema, not treated as match-all.
 
 ## list_components
@@ -59,6 +59,12 @@ No input. Returns the identity for pulling the package: `name`, `version`,
 Input `{ app_type? }`. Returns the once-per-project wiring: `pubspec`, the theme
 `wiring`, `access`, and a `note`. `material` (default) gives the `MaterialApp`
 form; `cupertino` and `widgets` give the `FossTheme` wrapper.
+
+## build_custom_component
+
+No input. Returns the recipe for building your own widget on-theme: the
+`context.fossTheme` access pattern, the customization layers, and a worked
+token-only example. Pair with `get_theme_tokens` for concrete values.
 
 ## Resource: fossui://llms.txt
 

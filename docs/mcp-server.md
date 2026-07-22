@@ -51,7 +51,7 @@ as a fallback.
 
 The content is baked into the Worker bundle at deploy time. The generator reads
 the package and writes `generator/build/registry.json`; the Worker imports that
-file and slices it across the six tools. So a content change (a new package
+file and slices it across the seven tools. So a content change (a new package
 release) is a regenerate plus redeploy, not a live edit. The served
 `meta.version` is whatever package version the last deploy bundled.
 
