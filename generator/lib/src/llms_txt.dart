@@ -148,9 +148,11 @@ List<String> _support(Map<String, Object?> c) {
     if (ctors == null || ctors.isEmpty) continue;
     // Skip a private scope; it is an implementation detail, not a call site.
     if (comp['kind'] == 'scope') continue;
-    out.add(
-      '${comp['kind']} ${comp['name']}(${_paramNames(ctors.first['params'])})',
-    );
+    // Emit every constructor: a companion with named constructors (the single /
+    // multiple of a group) has no callable unnamed form, so one line per ctor.
+    for (final ctor in ctors) {
+      out.add('${comp['kind']} ${ctor['name']}(${_paramNames(ctor['params'])})');
+    }
   }
   return out;
 }

@@ -41,10 +41,24 @@ void main() {
   });
 
   test('has the expected component set', () {
-    expect(components(), hasLength(35));
-    for (final c in components()) {
-      expect(c['name']! as String, startsWith('Foss'));
-    }
+    // The exact roster, so a rename or an accidental add/drop fails loudly and
+    // names the culprit. Update this set when a top-level component lands.
+    const expected = {
+      'FossAccordion', 'FossAlert', 'FossAlertDialog',
+      'FossAutocomplete', 'FossAvatar', 'FossBadge',
+      'FossButton', 'FossCalendar', 'FossCard',
+      'FossCheckbox', 'FossCombobox', 'FossDatePicker',
+      'FossDialog', 'FossDrawer', 'FossMeter',
+      'FossMultiCombobox', 'FossMultiSelect', 'FossNumberField',
+      'FossOtpField', 'FossPopover', 'FossProgress',
+      'FossRadio', 'FossSelect', 'FossSeparator',
+      'FossSkeleton', 'FossSlider', 'FossSpinner',
+      'FossSwitch', 'FossTabs', 'FossText',
+      'FossTextField', 'FossToast', 'FossToaster',
+      'FossToggle', 'FossTooltip',
+    };
+    final actual = components().map((c) => c['name']! as String).toSet();
+    expect(actual, equals(expected));
   });
 
   test('no unexpanded dartdoc directives leak into the manifest', () {

@@ -68,7 +68,8 @@ All are `Foss`-prefixed. Variants and sizes are enums passed as named params; a 
 - FossToggle: A button that holds a two-state pressed look: tap it to turn it on, tap again to release. It is the control behind a formatting button (bold, italic) in a toolbar, sized and shaped like a FossButton but carrying a binary on / off state. (Variant: standard | outline. Size: sm | md | lg)
   - style FossToggleStyle(backgroundColor, foregroundColor, side, borderRadius, cornerRadius, padding, minHeight, textStyle, shadow, iconSize, gap, disabledOpacity)
   - item FossToggleGroupItem(value, leading, child, semanticLabel, enabled)
-  - group FossToggleGroup(children, value, onChanged, variant, size, orientation, enabled, style)
+  - group FossToggleGroup.single(children, value, onChanged, variant, size, orientation, enabled, style)
+  - group FossToggleGroup.multiple(children, value, onChanged, variant, size, orientation, enabled, style)
   - style FossToggleGroupStyle(gap, connectedBorderColor)
 
 ### Feedback
