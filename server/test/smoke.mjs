@@ -184,13 +184,20 @@ assert.ok(doc.contents[0].text.includes("FossButton"));
 console.log("resource fossui://llms.txt:", doc.contents[0].text.length, "chars, has FossButton");
 
 // --- the bare root speaks MCP too, so a client that drops /mcp still connects ---
+// Edge propagation can lag a fresh deploy at the root path, so retry a few times
+// before asserting rather than racing the very first request.
 const rootUrl = new URL("/", url);
-const rootClient = new Client({ name: "smoke-root", version: "0.0.0" });
-await rootClient.connect(new StreamableHTTPClientTransport(rootUrl));
-const rootTools = await rootClient.listTools();
+let rootTools;
+for (let attempt = 1; attempt <= 5; attempt += 1) {
+  const rootClient = new Client({ name: "smoke-root", version: "0.0.0" });
+  await rootClient.connect(new StreamableHTTPClientTransport(rootUrl));
+  rootTools = await rootClient.listTools();
+  await rootClient.close();
+  if (rootTools.tools.length === 7) break;
+  if (attempt < 5) await new Promise((resolve) => setTimeout(resolve, 3000));
+}
 assert.equal(rootTools.tools.length, 7, "root endpoint should expose the same tools");
 console.log("root endpoint:", rootUrl.href, "->", rootTools.tools.length, "tools");
-await rootClient.close();
 
 console.log("\nall checks passed");
 await client.close();
