@@ -18,6 +18,16 @@ Map<String, Object?> extractTokens(List<ClassElement> classes) {
       'shadows': 'List<BoxShadow>',
       'motion': 'Duration',
     },
+    // The unit each family's raw values carry, so a reader knows 200 is
+    // milliseconds and 8 is logical pixels, not a bare number.
+    'units': {
+      'colors': 'ARGB hex, #AARRGGBB',
+      'radii': 'logical pixels',
+      'spacing': 'logical pixels',
+      'typography': 'logical pixels (fontSize); height is a multiple of fontSize',
+      'shadows': 'logical pixels (offset, blur, spread)',
+      'motion': 'milliseconds',
+    },
     'colors': {
       'light': _instance(byName('FossColors'), 'light'),
       'dark': _instance(byName('FossColors'), 'dark'),

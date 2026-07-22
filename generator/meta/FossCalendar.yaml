@@ -1,0 +1,29 @@
+tags: [calendar, date, month, grid, picker, range, schedule]
+whenToUse: >
+  An inline month grid for viewing and picking dates, always visible in the
+  layout. Use FossCalendar.single for one day, .multiple for a set, and .range
+  for a start-to-end span with FossDateRange. When the calendar should live
+  behind a field and open in a dialog, use FossDatePicker instead.
+conventions:
+  do:
+    - Pick the constructor for the mode: single, multiple, or range.
+    - Drive selected plus onSelected; the calendar is controlled and renders what you pass.
+    - Bound the grid with minDate and maxDate, or gate individual days with isDateEnabled.
+    - Set firstDayOfWeek with a DateTime weekday int (DateTime.monday through DateTime.sunday).
+    - Follow the month with focusedMonth plus onMonthChanged (controlled), or seed initialMonth (uncontrolled).
+    - Retheme globally through FossThemeData; for a one-off pass a FossCalendarStyle to style.
+  dont:
+    - Do not pass both focusedMonth and initialMonth; pick controlled or uncontrolled.
+    - Do not pass an int like 0 for firstDayOfWeek; use the DateTime weekday constants (1 to 7).
+    - Do not rely on time-of-day in a selected DateTime; days are compared by calendar date only.
+    - Do not reach for a String range; range mode uses FossDateRange(start, end).
+commonMistakes:
+  - wrong: "FossCalendar.single(selected: day, onSelected: (d) {}, firstDayOfWeek: 0)"
+    right: "FossCalendar.single(selected: day, onSelected: (d) {}, firstDayOfWeek: DateTime.sunday)"
+    why: firstDayOfWeek is a DateTime weekday int (1 to 7); Sunday is DateTime.sunday, not 0.
+  - wrong: "FossCalendar.range(selected: DateRange(a, b), onSelected: (r) {})"
+    right: "FossCalendar.range(selected: FossDateRange(start: a, end: b), onSelected: (r) {})"
+    why: Range selection uses FossDateRange with named start and end.
+  - wrong: "FossCalendar.single(onSelected: (d) => setState(() => day = d))"
+    right: "FossCalendar.single(selected: day, onSelected: (d) => setState(() => day = d))"
+    why: selected is required; the calendar is controlled and shows whatever you pass.

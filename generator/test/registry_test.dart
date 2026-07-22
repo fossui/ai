@@ -23,7 +23,13 @@ void main() {
   List<Map<String, Object?>> components() =>
       (registry['components']! as List).cast<Map<String, Object?>>();
 
-  const categories = {'Inputs', 'Feedback', 'Overlays', 'Layout'};
+  const categories = {
+    'Inputs',
+    'Feedback',
+    'Overlays',
+    'Layout',
+    'Typography',
+  };
   final emDash = String.fromCharCode(0x2014);
   final hex = RegExp(r'^#[0-9A-F]{8}$');
 
@@ -35,10 +41,24 @@ void main() {
   });
 
   test('has the expected component set', () {
-    expect(components(), hasLength(25));
-    for (final c in components()) {
-      expect(c['name']! as String, startsWith('Foss'));
-    }
+    // The exact roster, so a rename or an accidental add/drop fails loudly and
+    // names the culprit. Update this set when a top-level component lands.
+    const expected = {
+      'FossAccordion', 'FossAlert', 'FossAlertDialog',
+      'FossAutocomplete', 'FossAvatar', 'FossBadge',
+      'FossButton', 'FossCalendar', 'FossCard',
+      'FossCheckbox', 'FossCombobox', 'FossDatePicker',
+      'FossDialog', 'FossDrawer', 'FossMeter',
+      'FossMultiCombobox', 'FossMultiSelect', 'FossNumberField',
+      'FossOtpField', 'FossPopover', 'FossProgress',
+      'FossRadio', 'FossSelect', 'FossSeparator',
+      'FossSkeleton', 'FossSlider', 'FossSpinner',
+      'FossSwitch', 'FossTabs', 'FossText',
+      'FossTextField', 'FossToast', 'FossToaster',
+      'FossToggle', 'FossTooltip',
+    };
+    final actual = components().map((c) => c['name']! as String).toSet();
+    expect(actual, equals(expected));
   });
 
   test('no unexpanded dartdoc directives leak into the manifest', () {
@@ -151,6 +171,20 @@ void main() {
         'shadows': 'List<BoxShadow>',
         'motion': 'Duration',
       });
+    });
+
+    test('each family reports the unit its values carry', () {
+      final units = (tokens()['units']! as Map).cast<String, Object?>();
+      expect(units.keys.toSet(), {
+        'colors',
+        'radii',
+        'spacing',
+        'typography',
+        'shadows',
+        'motion',
+      });
+      expect(units['motion'], 'milliseconds');
+      expect(units['radii'], 'logical pixels');
     });
 
     test('radii are the expected scale', () {

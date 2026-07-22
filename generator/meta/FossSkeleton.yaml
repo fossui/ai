@@ -1,0 +1,27 @@
+tags: [skeleton, loading, placeholder, shimmer, loader, ssr]
+whenToUse: >
+  A loading placeholder that stands in for content while it loads: a muted box
+  with a shimmer that stops under reduced motion. Size it to the content it
+  replaces, and use FossSkeleton.circle for an avatar. For a determinate bar use
+  FossProgress; for a spinning indicator use FossSpinner.
+conventions:
+  do:
+    - Size the box with width and height to match the content it replaces.
+    - Use FossSkeleton.circle with a size for a round placeholder like an avatar.
+    - Compose several skeletons to mirror the shape of the loading region.
+    - Let the parent constrain it when width or height is left null.
+  dont:
+    - Do not pass a style; the skeleton has no FossSkeletonStyle and reads the theme only.
+    - Do not pass a color; the fill is the theme muted token.
+    - Do not use FossSkeleton.circle for a rectangle; the default constructor is the box.
+    - Do not leave it mounted after the content loads; swap it for the real widget.
+commonMistakes:
+  - wrong: "FossSkeleton(style: FossSkeletonStyle(color: Colors.grey))"
+    right: "FossSkeleton(width: 200, height: 16)"
+    why: There is no FossSkeletonStyle; the fill comes from the theme muted token.
+  - wrong: "FossSkeleton(width: 40, height: 40)"
+    right: "FossSkeleton.circle(size: 40)"
+    why: For a round avatar placeholder use FossSkeleton.circle with a size.
+  - wrong: "FossSkeleton()"
+    right: "FossSkeleton(width: 120, height: 20)"
+    why: With no width or height it defers to the parent; give it a size unless the parent bounds it.

@@ -18,7 +18,7 @@ const call = async (name, args = {}) => {
 // --- tools present ---
 const { tools } = await client.listTools();
 console.log("tools:", tools.map((t) => t.name).join(", "));
-assert.equal(tools.length, 6, "expected 6 tools");
+assert.equal(tools.length, 7, "expected 7 tools");
 
 // --- list_components: shape ---
 const list = await call("list_components");
@@ -86,7 +86,14 @@ console.log("search(button): top =", byName.components[0].name);
 const none = await call("search", { query: "zzzznope" });
 assert.deepEqual(none.components, []);
 assert.deepEqual(none.tokenFamilies, []);
+assert.deepEqual(none.related, []);
 console.log("search(zzzznope): empty, no crash");
+
+// a companion name surfaces, routed to its owner, even though it is not top-level
+const rel = await call("search", { query: "radiogroup" });
+const radioRel = rel.related.find((r) => r.name === "FossRadioGroup");
+assert.ok(radioRel && radioRel.component === "FossRadio", "RadioGroup should route to FossRadio");
+console.log("search(radiogroup): related ->", radioRel.name, "owned by", radioRel.component);
 
 const tokenHit = await call("search", { query: "color" });
 assert.ok(tokenHit.tokenFamilies.includes("colors"), "should surface the colors family");
@@ -103,11 +110,35 @@ const radii = await call("get_theme_tokens", { family: "radii" });
 assert.equal(radii.radii.md, 8);
 assert.equal(radii.access, "context.fossTheme");
 assert.equal(radii.type, "double", "radii family should report its Dart type");
-console.log("get_theme_tokens(radii): md=8, type=double, access present");
+assert.equal(radii.unit, "logical pixels", "radii family should report its unit");
+console.log("get_theme_tokens(radii): md=8, type=double, unit=logical pixels");
 
 const typo = await call("get_theme_tokens", { family: "typography" });
 assert.equal(typo.type, "TextStyle", "typography should resolve to TextStyle");
 console.log("get_theme_tokens(typography): type =", typo.type);
+
+// --- single-token lookup: type + unit + value for one token ---
+const one = await call("get_theme_tokens", { family: "radii", token: "md" });
+assert.equal(one.value, 8, "radii.md value is 8");
+assert.equal(one.type, "double");
+assert.equal(one.unit, "logical pixels");
+console.log("get_theme_tokens(radii, md): value=8, type=double, unit present");
+
+const color = await call("get_theme_tokens", { family: "colors", token: "primary" });
+assert.ok(color.value.light && color.value.dark, "a color role resolves to light + dark");
+console.log("get_theme_tokens(colors, primary): light + dark present");
+
+const motionTok = await call("get_theme_tokens", { family: "motion", token: "toast" });
+assert.equal(motionTok.unit, "milliseconds", "motion values are milliseconds");
+console.log("get_theme_tokens(motion, toast):", motionTok.value, motionTok.unit);
+
+// token without family is rejected; an unknown token suggests the real ones
+const noFam = await client.callTool({ name: "get_theme_tokens", arguments: { token: "md" } });
+assert.equal(noFam.isError, true, "token without family should error");
+const badTok = await client.callTool({ name: "get_theme_tokens", arguments: { family: "radii", token: "huge" } });
+assert.equal(badTok.isError, true, "unknown token should error");
+assert.ok(JSON.parse(badTok.content[0].text).didYouMean.includes("md"), "should suggest real tokens");
+console.log("get_theme_tokens: token needs family; unknown token -> didYouMean");
 
 // --- token search matches on synonyms, not just the family key ---
 const radiusHit = await call("search", { query: "radius" });
@@ -136,12 +167,30 @@ const dflt = await call("get_setup");
 assert.ok(dflt.wiring.includes("MaterialApp"), "no app_type defaults to material");
 console.log("get_setup: material=MaterialApp, cupertino/widgets=FossTheme, default=material");
 
+// --- build_custom_component: composition guidance + worked example ---
+const guide = await call("build_custom_component");
+assert.ok(guide.access.includes("context.fossTheme"), "guide should name the accessor");
+assert.equal(guide.layers.length, 3, "three customization layers");
+assert.ok(guide.example.includes("context.fossTheme") && guide.example.includes("t.radii.lg"),
+  "example should read tokens, not hardcode values");
+assert.ok(guide.tokens.includes("get_theme_tokens"), "guide should point at get_theme_tokens");
+console.log("build_custom_component: access + 3 layers + token example");
+
 // --- resource ---
 const { resources } = await client.listResources();
 assert.ok(resources.some((r) => r.uri === "fossui://llms.txt"));
 const doc = await client.readResource({ uri: "fossui://llms.txt" });
 assert.ok(doc.contents[0].text.includes("FossButton"));
 console.log("resource fossui://llms.txt:", doc.contents[0].text.length, "chars, has FossButton");
+
+// --- the bare root speaks MCP too, so a client that drops /mcp still connects ---
+const rootUrl = new URL("/", url);
+const rootClient = new Client({ name: "smoke-root", version: "0.0.0" });
+await rootClient.connect(new StreamableHTTPClientTransport(rootUrl));
+const rootTools = await rootClient.listTools();
+assert.equal(rootTools.tools.length, 7, "root endpoint should expose the same tools");
+console.log("root endpoint:", rootUrl.href, "->", rootTools.tools.length, "tools");
+await rootClient.close();
 
 console.log("\nall checks passed");
 await client.close();

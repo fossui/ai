@@ -14,10 +14,10 @@ a current, structured, version-accurate description of the library.
 
 ## Use it
 
-The server is live at `https://mcp.fossui.org/mcp`. Point any MCP client at it.
+The server is live at `https://mcp.fossui.org`. Point any MCP client at it.
 
 ```
-claude mcp add --transport http fossui https://mcp.fossui.org/mcp
+claude mcp add --transport http fossui https://mcp.fossui.org
 ```
 
 See [docs/mcp-server.md](docs/mcp-server.md) for the tools it exposes and how a

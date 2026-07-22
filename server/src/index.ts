@@ -1,5 +1,5 @@
 // The fossui MCP server: serves the generated manifest over Streamable HTTP.
-// Six read-only tools, each a slice of registry.json. The server holds no state;
+// Seven read-only tools, each a slice of registry.json. The server holds no state;
 // McpAgent handles the Workers fetch and transport.
 
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
@@ -46,6 +46,37 @@ const tokenAliases: Record<string, string[]> = {
   typography: ["type", "font", "text"],
   shadows: ["shadow", "elevation"],
   motion: ["motion", "animation", "duration"],
+};
+
+// How to build a custom widget that matches the library: the access pattern,
+// the customization layers, and a worked example. It teaches composition, not
+// numbers; concrete values stay in get_theme_tokens so nothing drifts here.
+const customComponentGuide = {
+  access:
+    "Read every token through context.fossTheme (a FossThemeData). It resolves the FossTheme InheritedWidget, then a FossThemeData registered in ThemeData.extensions, then the light default, so it works under MaterialApp, CupertinoApp, or a bare WidgetsApp.",
+  layers: [
+    "Global retheme: pass your own FossThemeData, or layer a FossThemeSpec over a base with FossThemeData.light.retheme(spec). This is the preferred path.",
+    "Per-component style object (FossButtonStyle and the like): the one-off override for a single instance.",
+    "No per-instance token props on constructors (no borderRadius:, color:, padding:). To change corners or color, change the theme.",
+  ],
+  example: [
+    "Widget build(BuildContext context) {",
+    "  final t = context.fossTheme;",
+    "  return Container(",
+    "    padding: t.spacing.all(4),",
+    "    decoration: BoxDecoration(",
+    "      color: t.colors.card,",
+    "      borderRadius: BorderRadius.circular(t.radii.lg),",
+    "      border: Border.all(color: t.colors.border),",
+    "      boxShadow: t.shadows.sm,",
+    "    ),",
+    "    child: Text('Custom', style: t.typography.sm.medium),",
+    "  );",
+    "}",
+  ].join("\n"),
+  tokens:
+    "Call get_theme_tokens for the concrete values of any family: colors, radii, spacing, typography, shadows, motion.",
+  note: "Corners render as a superellipse (squircle) across the built-in components; the shape builder is not public, so BorderRadius.circular is close but not identical.",
 };
 
 const json = (data: unknown) => ({
@@ -155,7 +186,7 @@ export class FossuiMcp extends McpAgent {
       "search",
       {
         description:
-          "Keyword search across component names, summaries, tags, and whenToUse, plus token family names. Returns ranked matches.",
+          "Keyword search across component names, summaries, tags, and whenToUse, the companion, enum, and launcher names they own, plus token family names. Returns ranked matches.",
         inputSchema: { query: z.string().min(1) },
       },
       async ({ query }) => {
@@ -171,10 +202,15 @@ export class FossuiMcp extends McpAgent {
           })
           .filter((x) => x.score > 0)
           .sort((a, b) => b.score - a.score);
+        // Companions, enums, and launchers are not top-level, so a query like
+        // "RadioGroup" would miss them. Surface each match routed to its owner.
+        const related = [...owned.values()]
+          .filter((o) => (o.record as { name?: string }).name?.toLowerCase().includes(q))
+          .map((o) => ({ name: (o.record as { name?: string }).name, kind: o.kind, component: o.component }));
         const tokenFamilies = Object.keys(manifest.tokens)
-          .filter((f) => f !== "access" && f !== "types")
+          .filter((f) => f !== "access" && f !== "types" && f !== "units")
           .filter((f) => f.includes(q) || (tokenAliases[f] ?? []).some((a) => a.includes(q) || q.includes(a)));
-        return json({ components, tokenFamilies });
+        return json({ components, related, tokenFamilies });
       },
     );
 
@@ -182,20 +218,53 @@ export class FossuiMcp extends McpAgent {
       "get_theme_tokens",
       {
         description:
-          "The theme token families (colors, radii, spacing, typography, shadows, motion), read via context.fossTheme. Omit family to get all.",
+          "The theme token families (colors, radii, spacing, typography, shadows, motion), read via context.fossTheme, each with its Dart type and unit. Omit family for all; pass token for one value, e.g. family 'radii' token 'md'.",
         inputSchema: {
           family: z
             .enum(["colors", "radii", "spacing", "typography", "shadows", "motion"])
             .optional(),
+          token: z
+            .string()
+            .min(1)
+            .optional()
+            .describe("A single token in the family, e.g. 'md' for radii, 'primary' for colors. Requires family."),
         },
       },
-      async ({ family }) => {
+      async ({ family, token }) => {
+        const types = manifest.tokens.types as Record<string, string>;
+        const units = manifest.tokens.units as Record<string, string>;
+        if (token && !family) {
+          return {
+            ...json({ error: "token requires family. Pass family too, e.g. family 'radii' token 'md'." }),
+            isError: true,
+          };
+        }
         if (!family) return json(manifest.tokens);
-        const types = manifest.tokens.types as Record<string, string> | undefined;
+        const familyData = manifest.tokens[family] as Record<string, unknown>;
+        if (token) {
+          // colors nest under light/dark; a role resolves to both. Other
+          // families are a flat step map.
+          const light = family === "colors" ? (familyData.light as Record<string, unknown>) : familyData;
+          if (!(token in light)) {
+            return {
+              ...json({
+                error: `No token '${token}' in ${family}. Call get_theme_tokens with just family to see them.`,
+                didYouMean: Object.keys(light),
+              }),
+              isError: true,
+            };
+          }
+          const value =
+            family === "colors"
+              ? { light: light[token], dark: (familyData.dark as Record<string, unknown>)[token] }
+              : familyData[token];
+          return json({ access: manifest.tokens.access, family, token, type: types[family], unit: units[family], value });
+        }
         return json({
           access: manifest.tokens.access,
-          type: types?.[family],
-          [family]: manifest.tokens[family],
+          type: types[family],
+          unit: units[family],
+          [family]: familyData,
         });
       },
     );
@@ -237,6 +306,15 @@ export class FossuiMcp extends McpAgent {
         return json({ pubspec: s.pubspec, wiring, access: s.access, note: s.note });
       },
     );
+
+    this.server.registerTool(
+      "build_custom_component",
+      {
+        description:
+          "How to build your own widget that matches the fossui look and feel: the context.fossTheme access pattern, the customization layers, and a worked token-only example. Pair with get_theme_tokens for concrete values.",
+      },
+      async () => json(customComponentGuide),
+    );
   }
 }
 
@@ -245,6 +323,17 @@ export default {
     const url = new URL(request.url);
     if (url.pathname === "/mcp") {
       return FossuiMcp.serve("/mcp", { binding: "FossuiMcp" }).fetch(request, env, ctx);
+    }
+    // Also accept MCP on the root, so a client that drops the /mcp path still
+    // connects. A real MCP request is any non-GET method (POST messages, DELETE
+    // teardown) or a GET that opens the SSE stream (Accept: text/event-stream);
+    // a plain GET / stays the health string for browsers and the health check.
+    if (url.pathname === "/") {
+      const accept = request.headers.get("accept") ?? "";
+      const wantsMcp = request.method !== "GET" || accept.includes("text/event-stream");
+      if (wantsMcp) {
+        return FossuiMcp.serve("/", { binding: "FossuiMcp" }).fetch(request, env, ctx);
+      }
     }
     return new Response("fossui mcp server", { status: 200 });
   },

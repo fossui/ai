@@ -1,0 +1,32 @@
+tags: [otp, code, pin, verification, one-time, segmented, input]
+whenToUse: >
+  A segmented one-time-code field: a row of single-character slots over one
+  hidden input, for a verification code or a short PIN. Typing, backspace,
+  arrows, and paste (or platform one-time-code autofill) drive a shared value.
+  For general text use FossTextField; for a longer secret use a text field with
+  obscureText.
+conventions:
+  do:
+    - Set the required length; the row holds that many slots.
+    - Drive value plus onChanged (controlled), or leave value null (uncontrolled).
+    - Act on the full code in onCompleted, which fires each time the row fills.
+    - Restrict characters with validation (FossOtpValidation numeric, alphabetic, alphanumeric, none).
+    - Mask entries with obscure, split the row with groups, and flag a bad code with error true.
+    - Size with size (FossOtpFieldSize md or lg); disable with enabled false.
+    - Set autofocus true to focus the row and open the keyboard on mount.
+    - Give a semanticsLabel so assistive tech announces the field (for example "Verification code").
+  dont:
+    - Do not pass a String for validation or size; both are enums.
+    - Do not read the code only from onChanged if you want the completed value; use onCompleted.
+    - Do not pass groups that fail to sum to length; a mismatched groups list is ignored.
+    - Do not pass slotColor or borderRadius on the widget; those live on FossOtpFieldStyle via style.
+commonMistakes:
+  - wrong: "FossOtpField(length: 6, validation: 'numeric')"
+    right: "FossOtpField(length: 6, validation: FossOtpValidation.numeric)"
+    why: validation is an enum (FossOtpValidation), not a string.
+  - wrong: "FossOtpField(length: 6, size: 'lg')"
+    right: "FossOtpField(length: 6, size: FossOtpFieldSize.lg)"
+    why: size is the FossOtpFieldSize enum (md or lg), not a string.
+  - wrong: "FossOtpField(length: 6, groups: [2, 2])"
+    right: "FossOtpField(length: 6, groups: [3, 3])"
+    why: groups must sum to length or they are ignored; 3 plus 3 makes 6.

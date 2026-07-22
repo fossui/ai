@@ -3,7 +3,9 @@ whenToUse: >-
   An edge-anchored modal panel that slides in from a screen edge and can be
   dragged back off it to dismiss: filters, a menu, or supplementary detail. Use
   FossDialog for a centered or bottom-sheet message or task, and FossAlertDialog
-  when the choice must be made and cannot be dismissed.
+  when the choice must be made and cannot be dismissed. This is also the sheet:
+  coming from a Sheet component, use FossDrawer (a bottom drawer is a bottom
+  sheet, side makes a side sheet). There is no separate FossSheet type.
 conventions:
   do:
     - Open it with showFossDrawer and build FossDrawer inside the builder.
@@ -37,3 +39,6 @@ commonMistakes:
   - wrong: "FossDrawer(borderRadius: 12, content: Body())"
     right: "FossDrawer(content: const Body(), style: const FossDrawerStyle(borderRadius: 12))"
     why: There is no borderRadius param; per-instance visuals go through FossDrawerStyle.
+  - wrong: "FossSheet(content: Body())"
+    right: "showFossDrawer(context: context, builder: (context) => const FossDrawer(content: Body()))"
+    why: There is no FossSheet type; the sheet is FossDrawer, opened with showFossDrawer.
