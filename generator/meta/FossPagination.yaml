@@ -1,0 +1,28 @@
+tags: [pagination, pager, pages, navigation, table, list]
+whenToUse: >
+  A row that walks through pages: a previous control, a run of page numbers with
+  an ellipsis wherever the run is cut, and a next control. It is controlled and
+  1-based. Use it under a table or a result list; for tabbed sections use
+  FossTabs.
+conventions:
+  do:
+    - Hold the page yourself and pass page, pageCount, and onPageChanged; page must be within 1 to pageCount.
+    - Treat siblingCount as a ceiling; the row uses the widest run its width can hold.
+    - Give the row a width. It reads the width it is given and cannot report an intrinsic size, so avoid IntrinsicWidth and Table cells, and leave it roughly 360 logical pixels or more at the default button size.
+    - Pass a null onPageChanged to make the row inert and dimmed while a page loads.
+    - Name the parts with label, pageLabel, previousLabel, nextLabel, and moreLabel for assistive technology.
+    - Retheme globally through FossThemeData, or pass a FossPaginationStyle to style for one row.
+  dont:
+    - Do not use a 0-based page index; the asserts reject it.
+    - Do not expect the row to advance itself; it renders page and reports the request.
+    - Do not lower pageCount below the current page without moving page too; the constructor asserts the range.
+commonMistakes:
+  - wrong: "FossPagination(page: 0, pageCount: 10, onPageChanged: (p) {})"
+    right: "FossPagination(page: 1, pageCount: 10, onPageChanged: (p) => setState(() => page = p))"
+    why: pages are 1-based and the constructor asserts 1 <= page <= pageCount.
+  - wrong: "IntrinsicWidth(child: FossPagination(page: 1, pageCount: 10, onPageChanged: (p) {}))"
+    right: "SizedBox(width: 420, child: FossPagination(page: 1, pageCount: 10, onPageChanged: (p) {}))"
+    why: the row sizes itself from the width it is given, so it has no intrinsic width.
+  - wrong: "FossPagination(page: page, pageCount: 24, siblingCount: 4, onPageChanged: (p) {}) // expecting 4 either side on a phone"
+    right: "FossPagination(page: page, pageCount: 24, siblingCount: 4, onPageChanged: (p) {}) // shows fewer when the width cannot hold them"
+    why: siblingCount is an upper bound, not a fixed count.

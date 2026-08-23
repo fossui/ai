@@ -47,14 +47,14 @@ void main() {
       'FossAccordion', 'FossAlert', 'FossAlertDialog',
       'FossAutocomplete', 'FossAvatar', 'FossBadge',
       'FossButton', 'FossCalendar', 'FossCard',
-      'FossCheckbox', 'FossCombobox', 'FossDatePicker',
-      'FossDialog', 'FossDrawer', 'FossMeter',
+      'FossCheckbox', 'FossChip', 'FossCombobox', 'FossDatePicker',
+      'FossDialog', 'FossDrawer', 'FossListTile', 'FossMeter',
       'FossMultiCombobox', 'FossMultiSelect', 'FossNumberField',
-      'FossOtpField', 'FossPopover', 'FossProgress',
+      'FossOtpField', 'FossPagination', 'FossPopover', 'FossProgress',
       'FossRadio', 'FossSelect', 'FossSeparator',
       'FossSkeleton', 'FossSlider', 'FossSpinner',
       'FossSwitch', 'FossTabs', 'FossText',
-      'FossTextField', 'FossToast', 'FossToaster',
+      'FossTextField', 'FossTimePicker', 'FossToast', 'FossToaster',
       'FossToggle', 'FossTooltip',
     };
     final actual = components().map((c) => c['name']! as String).toSet();

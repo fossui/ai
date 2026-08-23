@@ -1,0 +1,29 @@
+tags: [chip, tag, pill, filter, token, select, remove]
+whenToUse: >
+  A compact pill holding one value the user can pick or drop: a filter in a bar,
+  a tag on a record, a value inside a multi-select field. The callbacks decide
+  its shape. For a static status pill use FossBadge; for a button-shaped
+  two-state control use FossToggle.
+conventions:
+  do:
+    - Pass label as a Widget, normally a Text.
+    - Add onSelected to make the body toggle; selection is controlled, so render the selected flag you hold and update it from the callback.
+    - Add onRemove for the close affordance, and name it with removeLabel when 'Remove' is not specific enough.
+    - Choose the look with variant (FossChipVariant.soft or .outline) and the height with size (FossChipSize.sm 24 or .md 32).
+    - Disable with enabled false, which blocks the body and the close affordance alike.
+    - Retheme globally through FossThemeData, or pass a FossChipStyle to style for one instance.
+  dont:
+    - Do not expect the chip to hold its own selected state; without your setState it never changes.
+    - Do not pass a String to label; it takes a Widget.
+    - Do not reach for a color or borderRadius constructor param; those live on FossChipStyle.
+    - Do not use a chip for a static status mark; that is FossBadge.
+commonMistakes:
+  - wrong: "FossChip(label: 'Design', onSelected: (v) {})"
+    right: "FossChip(label: const Text('Design'), onSelected: (v) {})"
+    why: label is a Widget, not a String.
+  - wrong: "FossChip(label: const Text('Design'), onSelected: (v) => on = v)"
+    right: "FossChip(label: const Text('Design'), selected: on, onSelected: (v) => setState(() => on = v))"
+    why: selection is controlled; the chip renders selected and never flips it on its own.
+  - wrong: "FossChip(label: const Text('Design'), backgroundColor: Colors.green)"
+    right: "FossChip(label: const Text('Design'), style: FossChipStyle(backgroundColor: WidgetStatePropertyAll(Color(0xFF16A34A))))"
+    why: per-instance visuals go through FossChipStyle, and the color fields are WidgetStateProperty.

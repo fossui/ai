@@ -1,0 +1,32 @@
+tags: [time, picker, clock, hour, minute, field, dialog, input]
+whenToUse: >
+  A field that shows the chosen time and opens hour, minute, and period wheels
+  in a bottom sheet, or a centered card through presentation. It keeps a draft
+  and commits only when the footer confirms, so where a wheel stops is not a
+  choice. The trigger matches FossDatePicker, so the two line up in a form.
+conventions:
+  do:
+    - Hold the value yourself as a FossTimeOfDay? and pass value plus onChanged, both required.
+    - Read the picked time from onChanged only; it fires when the footer confirms, never while a wheel scrolls.
+    - Construct times with FossTimeOfDay(hour, minute) on a 24-hour clock; it is Comparable and has value equality.
+    - Set minuteStep to the increment you want; it must divide 60 evenly.
+    - Leave use24HourFormat null to follow the device, or set it to force a clock; true drops the period column.
+    - Bound the range with minTime, maxTime, and isTimeEnabled; a blocked time stays on the wheel, dimmed, and confirm is disabled while the draft rests on it.
+    - Choose the surface with presentation (FossDialogPresentation.bottomSheet or .centered), and control the modal with open plus onOpenChange or leave both null.
+    - Disable with enabled false; retheme globally through FossThemeData or pass a FossTimePickerStyle to style.
+  dont:
+    - Do not use Flutter's TimeOfDay; the API takes FossTimeOfDay.
+    - Do not try to read the time off the wheel as it scrolls; nothing is committed until confirm.
+    - Do not pass a String for presentation; it is the FossDialogPresentation enum.
+    - Do not disable by passing a null callback; onChanged is required, so use enabled false.
+    - Do not pass a minuteStep that does not divide 60; the constructor asserts it.
+commonMistakes:
+  - wrong: "FossTimePicker(value: const TimeOfDay(hour: 9, minute: 30), onChanged: (t) {})"
+    right: "FossTimePicker(value: const FossTimeOfDay(hour: 9, minute: 30), onChanged: (t) {})"
+    why: the value type is FossTimeOfDay, not Flutter's TimeOfDay.
+  - wrong: "FossTimePicker(value: time, onChanged: (t) {}, onOpenChange: (open) => readWheel())"
+    right: "FossTimePicker(value: time, onChanged: (t) => setState(() => time = t))"
+    why: the picker keeps a draft; the time arrives through onChanged when the footer confirms.
+  - wrong: "FossTimePicker(value: time, onChanged: (t) {}, minuteStep: 7)"
+    right: "FossTimePicker(value: time, onChanged: (t) {}, minuteStep: 5)"
+    why: minuteStep must divide 60 evenly, which the constructor asserts.
