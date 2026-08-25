@@ -1,0 +1,29 @@
+tags: [list, tile, row, settings, item, leading, trailing]
+whenToUse: >
+  One row of a list: an optional leading widget, a title over an optional
+  subtitle, and an optional trailing widget. A settings screen or an account
+  list is mostly this row repeated. Inside a FossCard, or any container that
+  already paints a surface, use variant plain so the row does not double-draw.
+conventions:
+  do:
+    - Pass title (required) and the optional slots as Widgets; every gap collapses with its slot.
+    - Use onTap to make the whole row one target, which adds hover, pressed, and keyboard activation.
+    - Keep variant filled for a standalone list, and switch to FossListTileVariant.plain inside a card or another painted container.
+    - Put an interactive widget in trailing when it owns its own gesture; a tap there does not call onTap.
+    - Disable with enabled false, which dims the row and blocks pointer and keyboard.
+    - Pass semanticLabel when the visible text does not read well on its own; it replaces the title and subtitle in semantics.
+  dont:
+    - Do not pass Strings to title or subtitle; both take Widgets.
+    - Do not treat a null onTap as disabled; that leaves the row inert at full opacity, which is a different state from enabled false.
+    - Do not expect more than one line of title or two of subtitle; both are clamped.
+    - Do not set colors or padding on the constructor; they live on FossListTileStyle.
+commonMistakes:
+  - wrong: "FossListTile(title: 'Notifications')"
+    right: "FossListTile(title: const Text('Notifications'))"
+    why: title is a Widget, not a String.
+  - wrong: "FossListTile(title: const Text('Sync'), onTap: null) // to disable"
+    right: "FossListTile(title: const Text('Sync'), enabled: false, onTap: startSync)"
+    why: a null onTap only makes the row inert; enabled false is the disabled state.
+  - wrong: "FossCard(content: FossListTile(title: const Text('Profile')))"
+    right: "FossCard(content: FossListTile(title: const Text('Profile'), variant: FossListTileVariant.plain))"
+    why: the default filled variant paints its own surface, which double-draws inside a card.

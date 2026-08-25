@@ -72,7 +72,11 @@ String renderLlmsTxt(Map<String, Object?> registry) {
       'override escape hatch. Icon slots take any `Widget`.',
     );
 
-  for (final category in categoryOrder) {
+  final extras = {
+    for (final c in components) c['category'] as String,
+  }.where((c) => !categoryOrder.contains(c));
+
+  for (final category in [...categoryOrder, ...extras]) {
     final inCategory = components.where((c) => c['category'] == category);
     if (inCategory.isEmpty) continue;
     b
