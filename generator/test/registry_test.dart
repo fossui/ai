@@ -226,9 +226,23 @@ void main() {
     expect(setup['access'], 'context.fossTheme');
   });
 
-  test('llms.txt names every component', () {
+  test('llms.txt lists every component in its category', () {
+    // Scoped to the Components section on purpose. The common mistakes block
+    // repeats the same `- Name: ` prefix, so a search over the whole file
+    // passes even when a component's category is dropped from the render,
+    // which is how FossText went unlisted under an unhandled category.
+    final start = llms.indexOf('## Components');
+    final end = llms.indexOf('## Common mistakes');
+    expect(start, isNonNegative);
+    expect(end, greaterThan(start));
+    final listed = llms.substring(start, end);
+
     for (final c in components()) {
-      expect(llms, contains(c['name']! as String));
+      expect(
+        listed,
+        contains('\n- ${c['name']}: '),
+        reason: '${c['name']} is missing from the Components section',
+      );
     }
   });
 
