@@ -8,19 +8,24 @@ How a call reaches a tool. The code is `server/src/index.ts`.
 agent (MCP client)
    │  JSON-RPC over Streamable HTTP
    ▼
-Worker fetch(request, env, ctx)
+Worker fetch(request)
    │  route on pathname
-   ├─ /mcp  ──►  FossuiMcp.serve("/mcp")  ──►  McpAgent  ──►  tool handler
+   ├─ POST /mcp  ──►  buildServer() + OneShotTransport  ──►  tool handler
+   ├─ GET/DELETE /mcp  ──►  405 (no stream to open, no session to end)
    └─ else  ──►  200 "fossui mcp server"   (health text)
    │
    ▼
 tool handler reads the in-memory manifest, returns a JSON slice
 ```
 
-`McpAgent` (from the `agents` SDK) owns the transport and the session; the
-handler code only maps an input to a manifest slice. The session lives in a
-Durable Object (`FossuiMcp`, SQLite-backed), so a multi-call MCP session keeps its
-state on one instance.
+A POST carries exactly one JSON-RPC message. `OneShotTransport` hands it to a
+fresh `McpServer` and resolves with whatever the server sends back, so the reply
+is a plain JSON response. A notification carries no id, expects nothing back, and
+returns 202.
+
+Nothing is shared between requests, so the server needs no session and no
+Durable Object. That also means there is no server-initiated stream: a `GET /mcp`
+gets 405, which the spec allows and clients handle by not opening one.
 
 ## Load time
 

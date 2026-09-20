@@ -1,9 +1,11 @@
 // The fossui MCP server: serves the generated manifest over Streamable HTTP.
-// Seven read-only tools, each a slice of registry.json. The server holds no state;
-// McpAgent handles the Workers fetch and transport.
+// Seven read-only tools, each a slice of registry.json. Every answer is a pure
+// function of the bundled manifest, so the server keeps no state at all: one
+// server instance per request, no session store, no Durable Object.
 
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { McpAgent } from "agents/mcp";
+import type { Transport } from "@modelcontextprotocol/sdk/shared/transport.js";
+import type { JSONRPCMessage } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
 
 import registry from "../../generator/build/registry.json";
@@ -16,10 +18,6 @@ interface Component {
   tags?: string[];
   whenToUse?: string;
   [key: string]: unknown;
-}
-
-interface Env {
-  FossuiMcp: DurableObjectNamespace;
 }
 
 const manifest = registry as {
@@ -114,225 +112,297 @@ const subsequence = (needle: string, hay: string) => {
   return i === needle.length;
 };
 
-export class FossuiMcp extends McpAgent {
-  server = new McpServer({ name: "fossui", version: manifest.meta.version });
+// A server instance is single-use: the SDK binds one transport at a time, so
+// concurrent requests in the same isolate each get their own.
+function buildServer(): McpServer {
+  const server = new McpServer({ name: "fossui", version: manifest.meta.version });
 
-  async init() {
-    // The flat overview, for clients that prefer reading the whole thing to
-    // making tool calls.
-    this.server.resource("llms.txt", "fossui://llms.txt", async (uri) => ({
-      contents: [{ uri: uri.href, mimeType: "text/plain", text: llmsTxt }],
-    }));
+  // The flat overview, for clients that prefer reading the whole thing to
+  // making tool calls.
+  server.resource("llms.txt", "fossui://llms.txt", async (uri) => ({
+    contents: [{ uri: uri.href, mimeType: "text/plain", text: llmsTxt }],
+  }));
 
-    this.server.registerTool(
-      "list_components",
-      {
-        description:
-          "List every fossui component with its category, one-line summary, and search tags. Call this first.",
+  server.registerTool(
+    "list_components",
+    {
+      description:
+        "List every fossui component with its category, one-line summary, and search tags. Call this first.",
+    },
+    async () =>
+      json(
+        manifest.components.map((c) => ({
+          name: c.name,
+          category: c.category,
+          summary: c.summary,
+          tags: c.tags ?? [],
+        })),
+      ),
+  );
+
+  server.registerTool(
+    "get_component",
+    {
+      description:
+        "Full API for one component: constructors, params, enums, companions, launcher functions (showFoss...), examples, urls, and the curated whenToUse, conventions, and commonMistakes.",
+      inputSchema: {
+        name: z.string().min(1).describe("Component name, e.g. FossButton"),
       },
-      async () =>
-        json(
-          manifest.components.map((c) => ({
-            name: c.name,
-            category: c.category,
-            summary: c.summary,
-            tags: c.tags ?? [],
-          })),
-        ),
-    );
+    },
+    async ({ name }) => {
+      const found = find(name);
+      if (found) return json(found);
+      // A companion or enum: return its record and point at the owning component.
+      const own = owned.get(name.toLowerCase());
+      if (own)
+        return json({
+          name,
+          kind: own.kind,
+          component: own.component,
+          note: `${name} belongs to ${own.component}. Call get_component("${own.component}") for the full picture.`,
+          ...(own.record as Record<string, unknown>),
+        });
+      const q = name.toLowerCase();
+      const contains = manifest.components.filter((c) => c.name.toLowerCase().includes(q));
+      const near = (
+        contains.length
+          ? contains
+          : manifest.components.filter((c) =>
+              subsequence(q, c.name.toLowerCase().replace("foss", "")),
+            )
+      ).map((c) => c.name);
+      return {
+        ...json({
+          error: `No component named ${name}. Call list_components to see them all.`,
+          didYouMean: near,
+        }),
+        isError: true,
+      };
+    },
+  );
 
-    this.server.registerTool(
-      "get_component",
-      {
-        description:
-          "Full API for one component: constructors, params, enums, companions, launcher functions (showFoss...), examples, urls, and the curated whenToUse, conventions, and commonMistakes.",
-        inputSchema: {
-          name: z.string().min(1).describe("Component name, e.g. FossButton"),
-        },
+  server.registerTool(
+    "search",
+    {
+      description:
+        "Keyword search across component names, summaries, tags, and whenToUse, the companion, enum, and launcher names they own, plus token family names. Returns ranked matches.",
+      inputSchema: { query: z.string().min(1) },
+    },
+    async ({ query }) => {
+      const q = query.toLowerCase();
+      const components = manifest.components
+        .map((c) => {
+          let score = 0;
+          if (c.name.toLowerCase().includes(q)) score += 3;
+          if ((c.tags ?? []).some((t) => t.toLowerCase().includes(q))) score += 2;
+          if (c.summary.toLowerCase().includes(q)) score += 1;
+          if ((c.whenToUse ?? "").toLowerCase().includes(q)) score += 1;
+          return { name: c.name, category: c.category, summary: c.summary, score };
+        })
+        .filter((x) => x.score > 0)
+        .sort((a, b) => b.score - a.score);
+      // Companions, enums, and launchers are not top-level, so a query like
+      // "RadioGroup" would miss them. Surface each match routed to its owner.
+      const related = [...owned.values()]
+        .filter((o) => (o.record as { name?: string }).name?.toLowerCase().includes(q))
+        .map((o) => ({ name: (o.record as { name?: string }).name, kind: o.kind, component: o.component }));
+      const tokenFamilies = Object.keys(manifest.tokens)
+        .filter((f) => f !== "access" && f !== "types" && f !== "units")
+        .filter((f) => f.includes(q) || (tokenAliases[f] ?? []).some((a) => a.includes(q) || q.includes(a)));
+      return json({ components, related, tokenFamilies });
+    },
+  );
+
+  server.registerTool(
+    "get_theme_tokens",
+    {
+      description:
+        "The theme token families (colors, radii, spacing, typography, shadows, motion), read via context.fossTheme, each with its Dart type and unit. Omit family for all; pass token for one value, e.g. family 'radii' token 'md'.",
+      inputSchema: {
+        family: z
+          .enum(["colors", "radii", "spacing", "typography", "shadows", "motion"])
+          .optional(),
+        token: z
+          .string()
+          .min(1)
+          .optional()
+          .describe("A single token in the family, e.g. 'md' for radii, 'primary' for colors. Requires family."),
       },
-      async ({ name }) => {
-        const found = find(name);
-        if (found) return json(found);
-        // A companion or enum: return its record and point at the owning component.
-        const own = owned.get(name.toLowerCase());
-        if (own)
-          return json({
-            name,
-            kind: own.kind,
-            component: own.component,
-            note: `${name} belongs to ${own.component}. Call get_component("${own.component}") for the full picture.`,
-            ...(own.record as Record<string, unknown>),
-          });
-        const q = name.toLowerCase();
-        const contains = manifest.components.filter((c) => c.name.toLowerCase().includes(q));
-        const near = (
-          contains.length
-            ? contains
-            : manifest.components.filter((c) =>
-                subsequence(q, c.name.toLowerCase().replace("foss", "")),
-              )
-        ).map((c) => c.name);
+    },
+    async ({ family, token }) => {
+      const types = manifest.tokens.types as Record<string, string>;
+      const units = manifest.tokens.units as Record<string, string>;
+      if (token && !family) {
         return {
-          ...json({
-            error: `No component named ${name}. Call list_components to see them all.`,
-            didYouMean: near,
-          }),
+          ...json({ error: "token requires family. Pass family too, e.g. family 'radii' token 'md'." }),
           isError: true,
         };
-      },
-    );
-
-    this.server.registerTool(
-      "search",
-      {
-        description:
-          "Keyword search across component names, summaries, tags, and whenToUse, the companion, enum, and launcher names they own, plus token family names. Returns ranked matches.",
-        inputSchema: { query: z.string().min(1) },
-      },
-      async ({ query }) => {
-        const q = query.toLowerCase();
-        const components = manifest.components
-          .map((c) => {
-            let score = 0;
-            if (c.name.toLowerCase().includes(q)) score += 3;
-            if ((c.tags ?? []).some((t) => t.toLowerCase().includes(q))) score += 2;
-            if (c.summary.toLowerCase().includes(q)) score += 1;
-            if ((c.whenToUse ?? "").toLowerCase().includes(q)) score += 1;
-            return { name: c.name, category: c.category, summary: c.summary, score };
-          })
-          .filter((x) => x.score > 0)
-          .sort((a, b) => b.score - a.score);
-        // Companions, enums, and launchers are not top-level, so a query like
-        // "RadioGroup" would miss them. Surface each match routed to its owner.
-        const related = [...owned.values()]
-          .filter((o) => (o.record as { name?: string }).name?.toLowerCase().includes(q))
-          .map((o) => ({ name: (o.record as { name?: string }).name, kind: o.kind, component: o.component }));
-        const tokenFamilies = Object.keys(manifest.tokens)
-          .filter((f) => f !== "access" && f !== "types" && f !== "units")
-          .filter((f) => f.includes(q) || (tokenAliases[f] ?? []).some((a) => a.includes(q) || q.includes(a)));
-        return json({ components, related, tokenFamilies });
-      },
-    );
-
-    this.server.registerTool(
-      "get_theme_tokens",
-      {
-        description:
-          "The theme token families (colors, radii, spacing, typography, shadows, motion), read via context.fossTheme, each with its Dart type and unit. Omit family for all; pass token for one value, e.g. family 'radii' token 'md'.",
-        inputSchema: {
-          family: z
-            .enum(["colors", "radii", "spacing", "typography", "shadows", "motion"])
-            .optional(),
-          token: z
-            .string()
-            .min(1)
-            .optional()
-            .describe("A single token in the family, e.g. 'md' for radii, 'primary' for colors. Requires family."),
-        },
-      },
-      async ({ family, token }) => {
-        const types = manifest.tokens.types as Record<string, string>;
-        const units = manifest.tokens.units as Record<string, string>;
-        if (token && !family) {
+      }
+      if (!family) return json(manifest.tokens);
+      const familyData = manifest.tokens[family] as Record<string, unknown>;
+      if (token) {
+        // colors nest under light/dark; a role resolves to both. Other
+        // families are a flat step map.
+        const light = family === "colors" ? (familyData.light as Record<string, unknown>) : familyData;
+        if (!(token in light)) {
           return {
-            ...json({ error: "token requires family. Pass family too, e.g. family 'radii' token 'md'." }),
+            ...json({
+              error: `No token '${token}' in ${family}. Call get_theme_tokens with just family to see them.`,
+              didYouMean: Object.keys(light),
+            }),
             isError: true,
           };
         }
-        if (!family) return json(manifest.tokens);
-        const familyData = manifest.tokens[family] as Record<string, unknown>;
-        if (token) {
-          // colors nest under light/dark; a role resolves to both. Other
-          // families are a flat step map.
-          const light = family === "colors" ? (familyData.light as Record<string, unknown>) : familyData;
-          if (!(token in light)) {
-            return {
-              ...json({
-                error: `No token '${token}' in ${family}. Call get_theme_tokens with just family to see them.`,
-                didYouMean: Object.keys(light),
-              }),
-              isError: true,
-            };
-          }
-          const value =
-            family === "colors"
-              ? { light: light[token], dark: (familyData.dark as Record<string, unknown>)[token] }
-              : familyData[token];
-          return json({ access: manifest.tokens.access, family, token, type: types[family], unit: units[family], value });
-        }
-        return json({
-          access: manifest.tokens.access,
-          type: types[family],
-          unit: units[family],
-          [family]: familyData,
-        });
-      },
-    );
+        const value =
+          family === "colors"
+            ? { light: light[token], dark: (familyData.dark as Record<string, unknown>)[token] }
+            : familyData[token];
+        return json({ access: manifest.tokens.access, family, token, type: types[family], unit: units[family], value });
+      }
+      return json({
+        access: manifest.tokens.access,
+        type: types[family],
+        unit: units[family],
+        [family]: familyData,
+      });
+    },
+  );
 
-    this.server.registerTool(
-      "get_package",
-      {
-        description:
-          "Package identity for pulling fossui into a project: name, version, pub.dev url, homepage, the install command, the pubspec dependency line, and the import. Call this to add the package; then get_setup for the theme wiring.",
-      },
-      async () => {
-        const { package: name, version, import: importPath, homepage } = manifest.meta;
-        return json({
-          name,
-          version,
-          pubDev: `https://pub.dev/packages/${name}`,
-          homepage,
-          install: `flutter pub add ${name}`,
-          pubspec: manifest.setup.pubspec,
-          import: importPath,
-          next: "Call get_setup for the theme wiring.",
-        });
-      },
-    );
+  server.registerTool(
+    "get_package",
+    {
+      description:
+        "Package identity for pulling fossui into a project: name, version, pub.dev url, homepage, the install command, the pubspec dependency line, and the import. Call this to add the package; then get_setup for the theme wiring.",
+    },
+    async () => {
+      const { package: name, version, import: importPath, homepage } = manifest.meta;
+      return json({
+        name,
+        version,
+        pubDev: `https://pub.dev/packages/${name}`,
+        homepage,
+        install: `flutter pub add ${name}`,
+        pubspec: manifest.setup.pubspec,
+        import: importPath,
+        next: "Call get_setup for the theme wiring.",
+      });
+    },
+  );
 
-    this.server.registerTool(
-      "get_setup",
-      {
-        description:
-          "Once-per-project wiring: add the dependency and register the theme. Pass app_type for the matching wiring.",
-        inputSchema: {
-          app_type: z.enum(["material", "cupertino", "widgets"]).optional(),
-        },
+  server.registerTool(
+    "get_setup",
+    {
+      description:
+        "Once-per-project wiring: add the dependency and register the theme. Pass app_type for the matching wiring.",
+      inputSchema: {
+        app_type: z.enum(["material", "cupertino", "widgets"]).optional(),
       },
-      async ({ app_type }) => {
-        const s = manifest.setup;
-        // Cupertino and bare WidgetsApp use the nonMaterial FossTheme wrapper.
-        const wiring = !app_type || app_type === "material" ? s.material : s.nonMaterial;
-        return json({ pubspec: s.pubspec, wiring, access: s.access, note: s.note });
-      },
-    );
+    },
+    async ({ app_type }) => {
+      const s = manifest.setup;
+      // Cupertino and bare WidgetsApp use the nonMaterial FossTheme wrapper.
+      const wiring = !app_type || app_type === "material" ? s.material : s.nonMaterial;
+      return json({ pubspec: s.pubspec, wiring, access: s.access, note: s.note });
+    },
+  );
 
-    this.server.registerTool(
-      "build_custom_component",
-      {
-        description:
-          "How to build your own widget that matches the fossui look and feel: the context.fossTheme access pattern, the customization layers, and a worked token-only example. Pair with get_theme_tokens for concrete values.",
-      },
-      async () => json(customComponentGuide),
-    );
+  server.registerTool(
+    "build_custom_component",
+    {
+      description:
+        "How to build your own widget that matches the fossui look and feel: the context.fossTheme access pattern, the customization layers, and a worked token-only example. Pair with get_theme_tokens for concrete values.",
+    },
+    async () => json(customComponentGuide),
+  );
+
+  return server;
+}
+
+// One message in, one message out. A stateless server never initiates anything,
+// so the transport lives only for the length of a single call and resolves with
+// whatever the server sends back.
+class OneShotTransport implements Transport {
+  onmessage?: (message: JSONRPCMessage) => void;
+  onclose?: () => void;
+  onerror?: (error: Error) => void;
+
+  readonly reply: Promise<JSONRPCMessage | null>;
+  private settle: (message: JSONRPCMessage | null) => void = () => {};
+
+  constructor() {
+    this.reply = new Promise((resolve) => {
+      this.settle = resolve;
+    });
+  }
+
+  async start() {}
+
+  async send(message: JSONRPCMessage) {
+    this.settle(message);
+  }
+
+  async close() {
+    // Unblock a caller still waiting: a notification never produces a reply.
+    this.settle(null);
+    this.onclose?.();
   }
 }
 
+const rpcError = (status: number, code: number, message: string) =>
+  new Response(JSON.stringify({ jsonrpc: "2.0", id: null, error: { code, message } }), {
+    status,
+    headers: { "content-type": "application/json" },
+  });
+
+async function handleMcp(request: Request): Promise<Response> {
+  // With no session to tear down and no server-initiated stream to open, GET and
+  // DELETE have nothing to carry. 405 is the spec's answer, and it stops a client
+  // from reopening a stream that would never deliver anything.
+  if (request.method !== "POST") {
+    return rpcError(405, -32000, "This server is stateless: POST a JSON-RPC message.");
+  }
+
+  let message: JSONRPCMessage;
+  try {
+    message = (await request.json()) as JSONRPCMessage;
+  } catch {
+    return rpcError(400, -32700, "Parse error: body must be a JSON-RPC message.");
+  }
+  if (Array.isArray(message)) {
+    return rpcError(400, -32600, "Batching is not supported. Send one message per request.");
+  }
+
+  const server = buildServer();
+  const transport = new OneShotTransport();
+  await server.connect(transport);
+  transport.onmessage?.(message);
+
+  // A notification or a response carries no id and expects nothing back.
+  if ((message as { id?: unknown }).id === undefined) {
+    await server.close();
+    return new Response(null, { status: 202 });
+  }
+
+  const reply = await transport.reply;
+  await server.close();
+  return new Response(JSON.stringify(reply), {
+    status: 200,
+    headers: { "content-type": "application/json" },
+  });
+}
+
 export default {
-  fetch(request: Request, env: Env, ctx: ExecutionContext): Response | Promise<Response> {
+  fetch(request: Request): Response | Promise<Response> {
     const url = new URL(request.url);
-    if (url.pathname === "/mcp") {
-      return FossuiMcp.serve("/mcp", { binding: "FossuiMcp" }).fetch(request, env, ctx);
-    }
+    if (url.pathname === "/mcp") return handleMcp(request);
     // Also accept MCP on the root, so a client that drops the /mcp path still
     // connects. A real MCP request is any non-GET method (POST messages, DELETE
     // teardown) or a GET that opens the SSE stream (Accept: text/event-stream);
     // a plain GET / stays the health string for browsers and the health check.
     if (url.pathname === "/") {
       const accept = request.headers.get("accept") ?? "";
-      const wantsMcp = request.method !== "GET" || accept.includes("text/event-stream");
-      if (wantsMcp) {
-        return FossuiMcp.serve("/", { binding: "FossuiMcp" }).fetch(request, env, ctx);
+      if (request.method !== "GET" || accept.includes("text/event-stream")) {
+        return handleMcp(request);
       }
     }
     return new Response("fossui mcp server", { status: 200 });

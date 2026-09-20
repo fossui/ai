@@ -63,10 +63,10 @@ from the `meta/` sidecars, reviewed like code. See `docs/generator/`.
 ```
    AI agent
       │
-      │  one of seven tools over GET /mcp (Streamable HTTP)
+      │  one of seven tools over POST /mcp (Streamable HTTP)
       ▼
  ┌─────────────────────────────────────────────┐
- │  server  (Durable Object: FossuiMcp)         │
+ │  server  (stateless Worker)                  │
  │                                              │
  │   list_components   catalog                  │
  │   get_component     one component's full API │

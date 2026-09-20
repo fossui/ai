@@ -12,8 +12,10 @@ with no cold-fetch and no failure mode. Redeploy is the update mechanism.
 ## Stateless and read-only
 
 Every tool is a pure function of the manifest. No writes, no user state, no
-per-request package work. The Durable Object exists only because the MCP session
-transport needs a home, not because the server keeps data.
+per-request package work. The server used to run inside a Durable Object for the
+session transport; since no tool reads state an earlier call wrote, the session
+bought nothing and cost a DO request on every hop. Building a server per request
+is both simpler and what the free tier is sized for.
 
 ## Fail loudly at load
 

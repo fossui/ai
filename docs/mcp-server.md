@@ -98,7 +98,7 @@ cd ../server && npx wrangler deploy
 ```
 
 The first deploy of the Worker also provisions the `mcp.fossui.org` custom
-domain and the Durable Object namespace McpAgent uses. Later deploys reuse them.
+domain. Later deploys reuse it.
 
 ## Roll back
 

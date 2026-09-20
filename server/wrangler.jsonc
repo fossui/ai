@@ -7,8 +7,10 @@
   "workers_dev": false,
   "routes": [{ "pattern": "mcp.fossui.org", "custom_domain": true }],
   "rules": [{ "type": "Text", "globs": ["**/*.txt"], "fallthrough": true }],
-  "durable_objects": {
-    "bindings": [{ "name": "FossuiMcp", "class_name": "FossuiMcp" }]
-  },
-  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["FossuiMcp"] }]
+  // The server is stateless, so the Durable Object it used to run in is gone.
+  // v2 drops the class; v1 has to stay for the migration chain to resolve.
+  "migrations": [
+    { "tag": "v1", "new_sqlite_classes": ["FossuiMcp"] },
+    { "tag": "v2", "deleted_classes": ["FossuiMcp"] }
+  ]
 }

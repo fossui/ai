@@ -32,14 +32,14 @@ npx tsc --noEmit        # typecheck
 npx wrangler deploy     # needs a Cloudflare account (wrangler login)
 ```
 
-`wrangler.jsonc` declares the Durable Object binding (`FossuiMcp`), the SQLite
-migration, `nodejs_compat`, and a Text rule so `llms.txt` imports as a string. It
-carries no route or custom domain yet, so a deploy lands on the generated
-`workers.dev` subdomain until one is added.
+`wrangler.jsonc` declares the `mcp.fossui.org` custom domain, `nodejs_compat`,
+and a Text rule so `llms.txt` imports as a string. The `migrations` list keeps the
+retired `FossuiMcp` Durable Object class: `v1` created it, `v2` deletes it, and
+both entries have to stay for the chain to resolve.
 
 ## Extending it
 
-- **New tool**: register it in `FossuiMcp.init` with a Zod input schema, returning
+- **New tool**: register it in `buildServer` with a Zod input schema, returning
   `json(...)` over a manifest slice. Add a check to `smoke.mjs`.
 - **New manifest field**: it flows through automatically; a tool only needs a
   change if it should surface the field. Regenerate, then redeploy.
